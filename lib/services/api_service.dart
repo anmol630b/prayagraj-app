@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:firebase_messaging/firebase_messaging.dart';
 
-const String baseUrl = 'https://prayagraj-delivery-production.up.railway.app/api';
+const String baseUrl = 'https://web-production-d08a8.up.railway.app/api';
 
 String _token = '';
 
@@ -33,7 +33,6 @@ class ApiService {
     return jsonDecode(response.body);
   }
 
-  // Search & Filter ke saath products
   static Future<List<dynamic>> getProducts({
     String? search,
     int? categoryId,
@@ -107,7 +106,6 @@ class ApiService {
     return jsonDecode(response.body);
   }
 
-  // Order tracking
   static Future<Map<String, dynamic>> trackOrder(int orderId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/orders/$orderId/tracking/'),
@@ -116,7 +114,6 @@ class ApiService {
     return jsonDecode(response.body);
   }
 
-  // Payment
   static Future<Map<String, dynamic>> createPayment(int amount) async {
     final response = await http.post(
       Uri.parse('$baseUrl/payment/create/'),
@@ -146,7 +143,6 @@ class ApiService {
     return data['status'] == 'success';
   }
 
-  // Delivery Agent
   static Future<Map<String, dynamic>> getAgentStatus() async {
     final response = await http.get(
       Uri.parse('$baseUrl/agent/status/'),

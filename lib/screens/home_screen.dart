@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
-import 'cart_screen.dart';
-import 'order_screen.dart';
-import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -73,6 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
             floating: true,
             pinned: true,
             backgroundColor: Colors.green.shade700,
+            automaticallyImplyLeading: false,
             flexibleSpace: FlexibleSpaceBar(
               title: const Text('🛒 Prayagraj Delivery',
                   style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
@@ -86,35 +84,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.receipt_long, color: Colors.white),
-                onPressed: () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const OrderScreen())),
-              ),
-              IconButton(
-                icon: const Icon(Icons.shopping_cart, color: Colors.white),
-                onPressed: () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const CartScreen())),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: GestureDetector(
-                  onTap: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const ProfileScreen())),
-                  child: CircleAvatar(
-                    radius: 18,
-                    backgroundColor: Colors.white.withOpacity(0.2),
-                    child: Text(
-                      ApiService.username.isNotEmpty
-                          ? ApiService.username[0].toUpperCase()
-                          : '?',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-              ),
-            ],
           ),
 
           // Search Bar

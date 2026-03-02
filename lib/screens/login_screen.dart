@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
-import 'home_screen.dart';
+import 'main_screen.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -27,12 +27,15 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _isLoading = false);
       if (result.containsKey('access')) {
         Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (_) => const HomeScreen()));
+            MaterialPageRoute(builder: (_) => const MainScreen()));
       } else {
         setState(() => _errorMessage = 'Username ya password galat hai!');
       }
     } catch (e) {
-      setState(() { _isLoading = false; _errorMessage = 'Server se connect nahi ho pa raha!'; });
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Server se connect nahi ho pa raha!';
+      });
     }
   }
 
@@ -69,9 +72,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Login karo', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                        const Text('Login karo',
+                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 6),
-                        Text('Apna account mein login karo', style: TextStyle(color: Colors.grey.shade500)),
+                        Text('Apna account mein login karo',
+                            style: TextStyle(color: Colors.grey.shade500)),
                         const SizedBox(height: 28),
                         TextField(
                           controller: _usernameController,
@@ -116,7 +121,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               children: [
                                 const Icon(Icons.error_outline, color: Colors.red, size: 18),
                                 const SizedBox(width: 8),
-                                Expanded(child: Text(_errorMessage, style: const TextStyle(color: Colors.red))),
+                                Expanded(child: Text(_errorMessage,
+                                    style: const TextStyle(color: Colors.red))),
                               ],
                             ),
                           ),
@@ -133,20 +139,22 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             child: _isLoading
                                 ? const CircularProgressIndicator(color: Colors.white)
-                                : const Text('Login', style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                                : const Text('Login',
+                                    style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
                           ),
                         ),
                         const SizedBox(height: 20),
                         Center(
                           child: TextButton(
                             onPressed: () => Navigator.push(context,
-                                MaterialPageRoute(builder: (_) => const SignupScreen())),
+                                MaterialPageRoute(builder: (_) => SignupScreen())),
                             child: RichText(
                               text: TextSpan(
                                 text: 'Naya account? ',
                                 style: TextStyle(color: Colors.grey.shade600),
                                 children: const [
-                                  TextSpan(text: 'Sign Up karo', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                                  TextSpan(text: 'Sign Up karo',
+                                      style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
                                 ],
                               ),
                             ),

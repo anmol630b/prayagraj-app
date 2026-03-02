@@ -27,9 +27,18 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            keyAlias = "prayagraj"
+            keyPassword = "Anmol@123"
+            storeFile = file("prayagraj-key.jks")
+            storePassword = "Anmol@123"
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }

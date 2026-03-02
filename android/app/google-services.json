@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "21531630409",
+    "project_id": "prayagraj-delivery",
+    "storage_bucket": "prayagraj-delivery.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:21531630409:android:b03f671e7d7cebb1925898",
+        "android_client_info": {
+          "package_name": "com.example.prayagraj_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAZEizcxGA--n7ksB5SUHqKDy1XmICcNYk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

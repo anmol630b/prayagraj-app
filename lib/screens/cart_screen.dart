@@ -34,10 +34,7 @@ class _CartScreenState extends State<CartScreen> {
   void _loadCart() async {
     try {
       final items = await ApiService.getCart();
-      setState(() {
-        _cartItems = items;
-        _isLoading = false;
-      });
+      setState(() { _cartItems = items; _isLoading = false; });
     } catch (e) {
       setState(() => _isLoading = false);
     }
@@ -53,18 +50,38 @@ class _CartScreenState extends State<CartScreen> {
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) async {
     final success = await ApiService.placeOrder(_deliveryAddress);
-    if (success) {
+    if (mounted && success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Payment aur Order successful!'), backgroundColor: Colors.green),
+        SnackBar(
+          content: const Row(children: [
+            Icon(Icons.check_circle, color: Colors.white),
+            SizedBox(width: 8),
+            Text('Payment aur Order successful! 🎉'),
+          ]),
+          backgroundColor: Colors.green.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
       );
       _loadCart();
     }
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Payment fail ho gayi!'), backgroundColor: Colors.red),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(children: [
+            Icon(Icons.error_outline, color: Colors.white),
+            SizedBox(width: 8),
+            Text('Payment fail ho gayi!'),
+          ]),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    }
   }
 
   void _handleExternalWallet(ExternalWalletResponse response) {}
@@ -76,62 +93,95 @@ class _CartScreenState extends State<CartScreen> {
       'amount': (_getTotal() * 100).toInt(),
       'name': 'Prayagraj Delivery',
       'description': 'Food Order',
-      'prefill': {
-        'contact': '9999999999',
-        'email': 'test@test.com',
-      }
+      'prefill': {'contact': '9999999999', 'email': 'test@test.com'},
     };
     _razorpay.open(options);
   }
 
   void _placeOrder() {
-    showDialog(
+    final addressController = TextEditingController();
+    showModalBottomSheet(
       context: context,
-      builder: (context) {
-        final addressController = TextEditingController();
-        return AlertDialog(
-          title: const Text('Delivery Address'),
-          content: TextField(
-            controller: addressController,
-            decoration: const InputDecoration(hintText: 'Apna address likho'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 24, right: 24, top: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Delivery Address', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            TextField(
+              controller: addressController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: 'Apna poora address likho...',
+                prefixIcon: const Icon(Icons.location_on, color: Colors.green),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.green, width: 2),
+                ),
+              ),
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _openRazorpay(addressController.text);
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              child: const Text('Pay Karo', style: TextStyle(color: Colors.white)),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _openRazorpay(addressController.text);
+                },
+                icon: const Icon(Icons.payment, color: Colors.white),
+                label: Text('Pay ₹${_getTotal().toStringAsFixed(0)}',
+                    style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green.shade700,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
             ),
+            const SizedBox(height: 24),
           ],
-        );
-      },
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        title: const Text('My Cart'),
-        backgroundColor: Colors.green,
+        title: const Text('My Cart 🛒', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.green.shade700,
         foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: Colors.green))
           : _cartItems.isEmpty
-              ? const Center(
+              ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.shopping_cart_outlined, size: 80, color: Colors.grey),
-                      SizedBox(height: 16),
-                      Text('Cart khali hai!', style: TextStyle(fontSize: 18, color: Colors.grey)),
+                      Icon(Icons.shopping_cart_outlined, size: 100, color: Colors.grey.shade300),
+                      const SizedBox(height: 16),
+                      const Text('Cart khali hai!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.grey)),
+                      const SizedBox(height: 8),
+                      Text('Kuch products add karo', style: TextStyle(color: Colors.grey.shade500)),
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.shopping_bag_outlined),
+                        label: const Text('Shopping karo'),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade700, foregroundColor: Colors.white),
+                      ),
                     ],
                   ),
                 )
@@ -139,34 +189,78 @@ class _CartScreenState extends State<CartScreen> {
                   children: [
                     Expanded(
                       child: ListView.builder(
+                        padding: const EdgeInsets.all(12),
                         itemCount: _cartItems.length,
                         itemBuilder: (context, index) {
                           final item = _cartItems[index];
-                          return ListTile(
-                            leading: const Icon(Icons.shopping_bag, color: Colors.green),
-                            title: Text(item['product_name'] ?? 'Product'),
-                            subtitle: Text('₹${item['product_price']} | Qty: ${item['quantity']}'),
+                          final itemTotal = double.parse(item['product_price'].toString()) * item['quantity'];
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 6)],
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 50, height: 50,
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.shade50,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(Icons.shopping_bag, color: Colors.green.shade400),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(item['product_name'] ?? 'Product',
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                                      Text('₹${item['product_price']} × ${item['quantity']}',
+                                          style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+                                    ],
+                                  ),
+                                ),
+                                Text('₹${itemTotal.toStringAsFixed(0)}',
+                                    style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.bold, fontSize: 16)),
+                              ],
+                            ),
                           );
                         },
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 10, offset: const Offset(0, -4))],
+                      ),
                       child: Column(
                         children: [
-                          Text(
-                            'Total: ₹${_getTotal().toStringAsFixed(2)}',
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('${_cartItems.length} items', style: TextStyle(color: Colors.grey.shade600)),
+                              Text('Total: ₹${_getTotal().toStringAsFixed(0)}',
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green.shade700)),
+                            ],
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 12),
                           SizedBox(
                             width: double.infinity,
-                            height: 50,
-                            child: ElevatedButton(
+                            height: 52,
+                            child: ElevatedButton.icon(
                               onPressed: _placeOrder,
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                              child: const Text('Pay & Order',
-                                  style: TextStyle(color: Colors.white, fontSize: 18)),
+                              icon: const Icon(Icons.payment, color: Colors.white),
+                              label: const Text('Pay & Order karo',
+                                  style: TextStyle(fontSize: 17, color: Colors.white, fontWeight: FontWeight.bold)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green.shade700,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
                             ),
                           ),
                         ],

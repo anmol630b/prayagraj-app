@@ -47,17 +47,17 @@ class _OrderScreenState extends State<OrderScreen> {
     }
   }
 
-  void _showTracking(BuildContext context, dynamic order) {
+  void _showTracking(BuildContext screenContext, dynamic order) {
     final status = order['status'];
     final steps = ['pending', 'confirmed', 'out_for_delivery', 'delivered'];
     final currentStep = steps.indexOf(status);
 
     showModalBottomSheet(
-      context: context,
+      context: screenContext,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (context) => Container(
+      builder: (sheetContext) => Container(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -99,36 +99,34 @@ class _OrderScreenState extends State<OrderScreen> {
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 16),
             Row(children: [
-              _trackingStep(Icons.access_time, 'Pending',   currentStep >= 0, Colors.amber),
+              _trackingStep(Icons.access_time, 'Pending',      currentStep >= 0, Colors.amber),
               _trackingLine(currentStep >= 1),
-              _trackingStep(Icons.check_circle, 'Confirmed', currentStep >= 1, Colors.blue),
+              _trackingStep(Icons.check_circle, 'Confirmed',   currentStep >= 1, Colors.blue),
               _trackingLine(currentStep >= 2),
-              _trackingStep(Icons.delivery_dining, 'On Way', currentStep >= 2, Colors.orange),
+              _trackingStep(Icons.delivery_dining, 'On Way',   currentStep >= 2, Colors.orange),
               _trackingLine(currentStep >= 3),
-              _trackingStep(Icons.done_all, 'Delivered',    currentStep >= 3, Colors.green),
+              _trackingStep(Icons.done_all, 'Delivered',       currentStep >= 3, Colors.green),
             ]),
             const SizedBox(height: 20),
 
-            // Cancel button — sirf pending orders pe dikhega
             if (status == 'pending') ...[
               const Divider(),
               const SizedBox(height: 8),
               ElevatedButton.icon(
                 onPressed: () async {
-                  Navigator.pop(context);
-                  // Confirm dialog
+                  Navigator.pop(sheetContext); // bottom sheet band karo
                   final confirm = await showDialog<bool>(
-                    context: context,
+                    context: screenContext,    // original screen context
                     builder: (_) => AlertDialog(
                       title: const Text('Order Cancel Karo?'),
                       content: Text('Order #${order['id']} cancel karna chahte ho?'),
                       actions: [
                         TextButton(
-                          onPressed: () => Navigator.pop(context, false),
+                          onPressed: () => Navigator.pop(screenContext, false),
                           child: const Text('Nahi'),
                         ),
                         ElevatedButton(
-                          onPressed: () => Navigator.pop(context, true),
+                          onPressed: () => Navigator.pop(screenContext, true),
                           style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                           child: const Text('Haan, Cancel Karo',
                               style: TextStyle(color: Colors.white)),
@@ -139,7 +137,7 @@ class _OrderScreenState extends State<OrderScreen> {
                   if (confirm == true) {
                     final ok = await ApiService.cancelOrder(order['id']);
                     if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      ScaffoldMessenger.of(screenContext).showSnackBar(SnackBar(
                         content: Text(ok
                             ? '✅ Order cancel ho gaya!'
                             : '❌ Cancel nahi hua, dobara try karo'),

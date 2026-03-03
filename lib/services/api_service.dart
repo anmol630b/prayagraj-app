@@ -109,7 +109,6 @@ class ApiService {
     return response.statusCode == 201;
   }
 
-  // Cart item quantity update karo
   static Future<bool> updateCartQuantity(int cartItemId, int quantity) async {
     final response = await http.patch(
       Uri.parse('$baseUrl/cart/'),
@@ -122,7 +121,6 @@ class ApiService {
     return response.statusCode == 200;
   }
 
-  // Cart item remove karo
   static Future<bool> removeFromCart(int cartItemId) async {
     final response = await http.delete(
       Uri.parse('$baseUrl/cart/'),
@@ -159,6 +157,21 @@ class ApiService {
         Uri.parse('$baseUrl/orders/$orderId/tracking/'),
         headers: {'Authorization': 'Bearer $_token'});
     return jsonDecode(response.body);
+  }
+
+  static Future<bool> cancelOrder(int orderId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/orders/$orderId/cancel/'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_token'
+        },
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
   }
 
   static Future<Map<String, dynamic>> createPayment(int amount) async {

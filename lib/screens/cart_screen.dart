@@ -62,12 +62,22 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
   void _updateQuantity(int index, int change) async {
     final item = _cartItems[index];
     final newQty = item['quantity'] + change;
+
+    // UI turant update karo
+    setState(() {
+      if (newQty <= 0) {
+        _cartItems.removeAt(index);
+      } else {
+        _cartItems[index]['quantity'] = newQty;
+      }
+    });
+
+    // API background mein call karo
     if (newQty <= 0) {
       await ApiService.removeFromCart(item['id']);
     } else {
       await ApiService.updateCartQuantity(item['id'], newQty);
     }
-    _loadCart();
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) async {

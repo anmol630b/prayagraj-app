@@ -40,13 +40,6 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
     }
   }
 
-  // Tab switch hone pe bhi reload ho
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _loadCart();
-  }
-
   void _loadCart() async {
     try {
       final items = await ApiService.getCart();

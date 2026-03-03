@@ -174,6 +174,23 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> changePassword(
+      String oldPass, String newPass) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/change-password/'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: jsonEncode({'old_password': oldPass, 'new_password': newPass}),
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'error': 'Network error'};
+    }
+  }
+
   static Future<Map<String, dynamic>> createPayment(int amount) async {
     final response = await http.post(
       Uri.parse('$baseUrl/payment/create/'),

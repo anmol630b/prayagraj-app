@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 import 'login_screen.dart';
 
@@ -128,6 +129,24 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$url open nahi hua'),
+              behavior: SnackBarBehavior.floating),
+        );
+      }
+    }
+  }
+
+  void _callPhone() => _launchUrl('tel:+919999999999');
+  void _sendEmail() => _launchUrl('mailto:support@prayagrajdelivery.com?subject=Support Request');
+  void _openWhatsApp() => _launchUrl('https://wa.me/919999999999?text=Hello, I need help with my order');
+
   void _openNotifications() {
     showModalBottomSheet(
       context: context,
@@ -176,7 +195,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           _sheetHeader(Icons.security, 'Privacy & Security', Colors.green),
           const SizedBox(height: 20),
           _toggleRow(setBS, icon: Icons.location_on, color: Colors.blue,
-              title: 'Location Access', sub: 'Delivery ke liye',
+              title: 'Location Access', sub: 'Delivery ke liye zaroori',
               val: _locationAccess, onChanged: (v) {
                 setBS(() => _locationAccess = v);
                 setState(() => _locationAccess = v);
@@ -212,6 +231,144 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  void _openChangePassword() {
+    final oldCtrl  = TextEditingController();
+    final newCtrl  = TextEditingController();
+    final confCtrl = TextEditingController();
+    bool oldVisible  = false;
+    bool newVisible  = false;
+    bool confVisible = false;
+    bool isLoading   = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (bsCtx) => StatefulBuilder(builder: (ctx, setBS) => Padding(
+        padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+            left: 24, right: 24, top: 24),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          _sheetHeader(Icons.lock_outline, 'Change Password', Colors.indigo),
+          const SizedBox(height: 20),
+          TextField(
+            controller: oldCtrl,
+            obscureText: !oldVisible,
+            decoration: InputDecoration(
+              labelText: 'Purana Password',
+              prefixIcon: const Icon(Icons.lock_outline),
+              suffixIcon: IconButton(
+                icon: Icon(oldVisible ? Icons.visibility_off : Icons.visibility),
+                onPressed: () => setBS(() => oldVisible = !oldVisible),
+              ),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.green, width: 2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: newCtrl,
+            obscureText: !newVisible,
+            decoration: InputDecoration(
+              labelText: 'Naya Password',
+              prefixIcon: const Icon(Icons.lock),
+              suffixIcon: IconButton(
+                icon: Icon(newVisible ? Icons.visibility_off : Icons.visibility),
+                onPressed: () => setBS(() => newVisible = !newVisible),
+              ),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.green, width: 2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: confCtrl,
+            obscureText: !confVisible,
+            decoration: InputDecoration(
+              labelText: 'Password Confirm Karo',
+              prefixIcon: const Icon(Icons.lock_reset),
+              suffixIcon: IconButton(
+                icon: Icon(confVisible ? Icons.visibility_off : Icons.visibility),
+                onPressed: () => setBS(() => confVisible = !confVisible),
+              ),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.green, width: 2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity, height: 50,
+            child: ElevatedButton(
+              onPressed: isLoading ? null : () async {
+                if (oldCtrl.text.isEmpty || newCtrl.text.isEmpty || confCtrl.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Saare fields bharein!'),
+                    backgroundColor: Colors.orange,
+                    behavior: SnackBarBehavior.floating,
+                  ));
+                  return;
+                }
+                if (newCtrl.text != confCtrl.text) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Naya password match nahi kar raha!'),
+                    backgroundColor: Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                  ));
+                  return;
+                }
+                if (newCtrl.text.length < 6) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Password kam se kam 6 characters ka hona chahiye!'),
+                    backgroundColor: Colors.orange,
+                    behavior: SnackBarBehavior.floating,
+                  ));
+                  return;
+                }
+                setBS(() => isLoading = true);
+                final result = await ApiService.changePassword(oldCtrl.text, newCtrl.text);
+                setBS(() => isLoading = false);
+                if (mounted) Navigator.pop(bsCtx);
+                if (result.containsKey('message')) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(result['message']),
+                    backgroundColor: Colors.green.shade700,
+                    behavior: SnackBarBehavior.floating,
+                  ));
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(result['error'] ?? 'Kuch galat hua!'),
+                    backgroundColor: Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                  ));
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.indigo,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: isLoading
+                  ? const SizedBox(height: 20, width: 20,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text('Password Change Karo',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+          ),
+          const SizedBox(height: 24),
+        ]),
+      )),
+    );
+  }
+
   void _openHelp() {
     showModalBottomSheet(
       context: context,
@@ -220,25 +377,29 @@ class _ProfileScreenState extends State<ProfileScreen>
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => DraggableScrollableSheet(
         expand: false,
-        initialChildSize: 0.6,
+        initialChildSize: 0.65,
         builder: (_, ctrl) => SingleChildScrollView(
           controller: ctrl,
           padding: const EdgeInsets.all(24),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             _sheetHeader(Icons.help, 'Help & Support', Colors.blue),
             const SizedBox(height: 20),
-            _contactTile(Icons.phone, '+91 9999999999', 'Call karo', Colors.green),
-            _contactTile(Icons.email, 'support@prayagrajdelivery.com', 'Email karo', Colors.blue),
-            _contactTile(Icons.chat, 'WhatsApp pe chat karo', 'Instant reply', Colors.green),
+            GestureDetector(onTap: _callPhone,
+                child: _contactTile(Icons.phone, '+91 9999999999', 'Call karo', Colors.green)),
+            GestureDetector(onTap: _sendEmail,
+                child: _contactTile(Icons.email, 'support@prayagrajdelivery.com', 'Email karo', Colors.blue)),
+            GestureDetector(onTap: _openWhatsApp,
+                child: _contactTile(Icons.chat, 'WhatsApp pe chat karo', 'Instant reply milega', Colors.green)),
             const SizedBox(height: 20),
             const Text('FAQs', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
             const SizedBox(height: 8),
             _faq('Order cancel kaise kare?',
-                'Order place ke 5 min andar Orders tab se cancel kar sakte hain.'),
+                'Order place ke baad Orders tab se pending order tap karo aur Cancel button dabao.'),
             _faq('Refund kab milega?',
                 '3-5 business days mein original payment method pe wapas aata hai.'),
             _faq('Delivery charge hai?', 'Abhi sabhi orders pe free delivery hai!'),
             _faq('Delivery time kitna hai?', 'Usually 30-45 minutes mein deliver ho jata hai.'),
+            _faq('Password bhool gaya?', 'Profile mein Change Password option se naya password set karo.'),
           ]),
         ),
       ),
@@ -258,7 +419,8 @@ class _ProfileScreenState extends State<ProfileScreen>
             bottom: MediaQuery.of(ctx).viewInsets.bottom,
             left: 24, right: 24, top: 24),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Text('Rate Our App', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          const Text('Rate Our App ⭐',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
           Text('Aapka feedback hamein improve karta hai!',
               style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
@@ -276,7 +438,8 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
           if (stars > 0) ...[
             const SizedBox(height: 8),
-            Text(['', 'Bahut bura 😞', 'Thoda theek 😐', 'Accha hai 🙂', 'Bahut accha 😊', 'Ekdum best! 🎉'][stars],
+            Text(['', 'Bahut bura 😞', 'Thoda theek 😐', 'Accha hai 🙂',
+                'Bahut accha 😊', 'Ekdum best! 🎉'][stars],
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
           ],
           const SizedBox(height: 16),
@@ -309,7 +472,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                 disabledBackgroundColor: Colors.grey.shade200,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Text('Submit', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: const Text('Submit',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ),
           const SizedBox(height: 24),
@@ -325,13 +489,14 @@ class _ProfileScreenState extends State<ProfileScreen>
       context: context,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => Padding(
+      builder: (bsCtx) => Padding(
         padding: const EdgeInsets.all(24),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Row(children: [
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(12)),
               child: Icon(Icons.receipt_long, color: Colors.green.shade700),
             ),
             const SizedBox(width: 12),
@@ -345,7 +510,8 @@ class _ProfileScreenState extends State<ProfileScreen>
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(10)),
             child: Row(children: [
               Icon(Icons.location_on, color: Colors.red.shade400, size: 16),
               const SizedBox(width: 6),
@@ -355,7 +521,8 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
           const SizedBox(height: 24),
           const Align(alignment: Alignment.centerLeft,
-              child: Text('Order Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15))),
+              child: Text('Order Status',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15))),
           const SizedBox(height: 16),
           Row(children: [
             _tStep(Icons.access_time, 'Pending',    step >= 0, Colors.amber),
@@ -366,7 +533,56 @@ class _ProfileScreenState extends State<ProfileScreen>
             _tLine(step >= 3),
             _tStep(Icons.done_all, 'Delivered',     step >= 3, Colors.green),
           ]),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
+          if (order['status'] == 'pending') ...[
+            const Divider(),
+            const SizedBox(height: 8),
+            ElevatedButton.icon(
+              onPressed: () async {
+                Navigator.pop(bsCtx);
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (_) => AlertDialog(
+                    title: const Text('Order Cancel Karo?'),
+                    content: Text('Order #${order['id']} cancel karna chahte ho?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Nahi'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                        child: const Text('Haan, Cancel Karo',
+                            style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirm == true) {
+                  final ok = await ApiService.cancelOrder(order['id']);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(ok ? '✅ Order cancel ho gaya!' : '❌ Cancel nahi hua'),
+                      backgroundColor: ok ? Colors.red.shade600 : Colors.orange,
+                      behavior: SnackBarBehavior.floating,
+                    ));
+                    if (ok) { setState(() => _isLoading = true); _loadOrders(); }
+                  }
+                }
+              },
+              icon: const Icon(Icons.cancel_outlined),
+              label: const Text('Order Cancel Karo'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade600,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 48),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ] else
+            const SizedBox(height: 8),
         ]),
       ),
     );
@@ -385,7 +601,6 @@ class _ProfileScreenState extends State<ProfileScreen>
         _appInfoRow('Version', 'v1.0.0'),
         _appInfoRow('Developer', 'Anmol'),
         _appInfoRow('Backend', 'Django + Railway'),
-        _appInfoRow('Images', 'Cloudinary'),
       ]),
       actions: [
         ElevatedButton(
@@ -468,7 +683,8 @@ class _ProfileScreenState extends State<ProfileScreen>
             backgroundColor: Colors.white,
             child: Text(
               username.isNotEmpty ? username[0].toUpperCase() : '?',
-              style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.green.shade700),
+              style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold,
+                  color: Colors.green.shade700),
             ),
           ),
         ),
@@ -482,7 +698,8 @@ class _ProfileScreenState extends State<ProfileScreen>
         ),
       ]),
       const SizedBox(height: 10),
-      Text(username, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+      Text(username, style: const TextStyle(color: Colors.white, fontSize: 20,
+          fontWeight: FontWeight.bold)),
       const SizedBox(height: 2),
       Text(email.isNotEmpty ? email : 'Prayagraj Delivery User',
           style: const TextStyle(color: Colors.white70, fontSize: 13)),
@@ -493,7 +710,8 @@ class _ProfileScreenState extends State<ProfileScreen>
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        const Text('Edit Profile', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+        const Text('Edit Profile',
+            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
         const SizedBox(height: 10),
         _editField(_nameCtrl, 'Name', Icons.person),
         const SizedBox(height: 8),
@@ -509,7 +727,8 @@ class _ProfileScreenState extends State<ProfileScreen>
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: Text('Save Changes', style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.bold)),
+            child: Text('Save Changes',
+                style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.bold)),
           ),
         ),
       ]),
@@ -526,8 +745,10 @@ class _ProfileScreenState extends State<ProfileScreen>
         prefixIcon: Icon(icon, color: Colors.white70, size: 18),
         isDense: true,
         contentPadding: const EdgeInsets.symmetric(vertical: 10),
-        enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.white38)),
-        focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.white, width: 2)),
+        enabledBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.white38)),
+        focusedBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.white, width: 2)),
       ),
     );
   }
@@ -550,19 +771,22 @@ class _ProfileScreenState extends State<ProfileScreen>
             gradient: LinearGradient(colors: [Colors.green.shade700, Colors.green.shade500],
                 begin: Alignment.topLeft, end: Alignment.bottomRight),
             borderRadius: BorderRadius.circular(16),
-            boxShadow: [BoxShadow(color: Colors.green.withOpacity(0.25), blurRadius: 10, offset: const Offset(0, 4))],
+            boxShadow: [BoxShadow(color: Colors.green.withOpacity(0.25),
+                blurRadius: 10, offset: const Offset(0, 4))],
           ),
           child: Row(children: [
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12)),
               child: const Icon(Icons.currency_rupee, color: Colors.white, size: 22),
             ),
             const SizedBox(width: 14),
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Text('Total Spent', style: TextStyle(color: Colors.white70, fontSize: 12)),
               Text('₹${_totalSpent().toStringAsFixed(0)}',
-                  style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                  style: const TextStyle(color: Colors.white, fontSize: 24,
+                      fontWeight: FontWeight.bold)),
             ]),
             const Spacer(),
             const Icon(Icons.trending_up, color: Colors.white60, size: 28),
@@ -576,7 +800,8 @@ class _ProfileScreenState extends State<ProfileScreen>
           _divider(),
           _infoRow2(Icons.email, 'Email', email.isNotEmpty ? email : 'N/A', Colors.purple),
           _divider(),
-          _infoRow2(Icons.phone, 'Phone', _phoneCtrl.text.isNotEmpty ? _phoneCtrl.text : 'Add karo', Colors.green),
+          _infoRow2(Icons.phone, 'Phone',
+              _phoneCtrl.text.isNotEmpty ? _phoneCtrl.text : 'Add karo', Colors.green),
         ]),
         const SizedBox(height: 20),
         _sectionLabel('Settings'),
@@ -585,19 +810,27 @@ class _ProfileScreenState extends State<ProfileScreen>
           _settingsTile(Icons.notifications_outlined, 'Notifications',
               _orderNotif || _deliveryNotif ? 'On' : 'Off', Colors.orange, _openNotifications),
           _divider(),
-          _settingsTile(Icons.security, 'Privacy & Security', 'Data settings', Colors.green, _openPrivacy),
+          _settingsTile(Icons.security, 'Privacy & Security',
+              'Data settings', Colors.green, _openPrivacy),
           _divider(),
-          _settingsTile(Icons.help_outline, 'Help & Support', 'FAQs & contact', Colors.blue, _openHelp),
+          _settingsTile(Icons.lock_outline, 'Change Password',
+              'Password badlo', Colors.indigo, _openChangePassword),
           _divider(),
-          _settingsTile(Icons.star_outline, 'Rate App', 'Feedback do', Colors.amber, _openRateApp),
+          _settingsTile(Icons.help_outline, 'Help & Support',
+              'Call, Email, WhatsApp', Colors.blue, _openHelp),
           _divider(),
-          _settingsTile(Icons.info_outline, 'App Version', 'v1.0.0', Colors.grey, _showAppInfo),
+          _settingsTile(Icons.star_outline, 'Rate App',
+              'Feedback do', Colors.amber, _openRateApp),
+          _divider(),
+          _settingsTile(Icons.info_outline, 'App Version',
+              'v1.0.0', Colors.grey, _showAppInfo),
         ]),
         const SizedBox(height: 20),
         OutlinedButton.icon(
           onPressed: _logout,
           icon: const Icon(Icons.logout, color: Colors.red, size: 18),
-          label: const Text('Logout', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          label: const Text('Logout',
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
           style: OutlinedButton.styleFrom(
             side: BorderSide(color: Colors.red.shade300),
             padding: const EdgeInsets.symmetric(vertical: 14),
@@ -610,7 +843,8 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _orderHistoryTab() {
-    if (_isLoading) return const Center(child: CircularProgressIndicator(color: Colors.green));
+    if (_isLoading) return const Center(
+        child: CircularProgressIndicator(color: Colors.green));
     if (_orders.isEmpty) {
       return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         Icon(Icons.receipt_long_outlined, size: 80, color: Colors.grey.shade300),
@@ -638,12 +872,14 @@ class _ProfileScreenState extends State<ProfileScreen>
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(14),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6)],
+                boxShadow: [BoxShadow(
+                    color: Colors.black.withOpacity(0.04), blurRadius: 6)],
               ),
               child: Row(children: [
                 Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                  decoration: BoxDecoration(color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12)),
                   child: Icon(_statusIcon(order['status']), color: color, size: 22),
                 ),
                 const SizedBox(width: 12),
@@ -654,16 +890,22 @@ class _ProfileScreenState extends State<ProfileScreen>
                   Text(order['address'],
                       style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
                       maxLines: 1, overflow: TextOverflow.ellipsis),
+                  if (order['status'] == 'pending')
+                    Text('Tap karo cancel ke liye',
+                        style: TextStyle(color: Colors.red.shade400, fontSize: 11)),
                 ])),
                 Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                   Text('₹${order['total_price']}',
-                      style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.bold, fontSize: 15)),
+                      style: TextStyle(color: Colors.green.shade700,
+                          fontWeight: FontWeight.bold, fontSize: 15)),
                   const SizedBox(height: 4),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+                    decoration: BoxDecoration(color: color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20)),
                     child: Text(order['status'],
-                        style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+                        style: TextStyle(color: color, fontSize: 11,
+                            fontWeight: FontWeight.w600)),
                   ),
                 ]),
               ]),
@@ -676,26 +918,26 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Color _statusColor(String s) {
     switch (s) {
-      case 'confirmed': return Colors.blue;
-      case 'delivered': return Colors.green;
-      case 'cancelled': return Colors.red;
+      case 'confirmed':        return Colors.blue;
+      case 'delivered':        return Colors.green;
+      case 'cancelled':        return Colors.red;
       case 'out_for_delivery': return Colors.orange;
-      default: return Colors.amber;
+      default:                 return Colors.amber;
     }
   }
 
   IconData _statusIcon(String s) {
     switch (s) {
-      case 'confirmed': return Icons.check_circle;
-      case 'delivered': return Icons.done_all;
-      case 'cancelled': return Icons.cancel;
+      case 'confirmed':        return Icons.check_circle;
+      case 'delivered':        return Icons.done_all;
+      case 'cancelled':        return Icons.cancel;
       case 'out_for_delivery': return Icons.delivery_dining;
-      default: return Icons.access_time;
+      default:                 return Icons.access_time;
     }
   }
 
-  Widget _sectionLabel(String t) =>
-      Text(t, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87));
+  Widget _sectionLabel(String t) => Text(t,
+      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87));
 
   Widget _divider() => Divider(height: 1, color: Colors.grey.shade100, indent: 16, endIndent: 16);
 
@@ -749,7 +991,8 @@ class _ProfileScreenState extends State<ProfileScreen>
         const SizedBox(height: 6),
         Text(val, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
         const SizedBox(height: 2),
-        Text(label, style: TextStyle(color: Colors.grey.shade500, fontSize: 11), textAlign: TextAlign.center),
+        Text(label, style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+            textAlign: TextAlign.center),
       ]),
     ),
   );
@@ -771,7 +1014,8 @@ class _ProfileScreenState extends State<ProfileScreen>
   }) => Container(
     margin: const EdgeInsets.only(bottom: 10),
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-    decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(12),
+    decoration: BoxDecoration(color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200)),
     child: Row(children: [
       Container(
@@ -791,7 +1035,8 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget _contactTile(IconData icon, String title, String sub, Color color) => Container(
     margin: const EdgeInsets.only(bottom: 10),
     padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(12),
+    decoration: BoxDecoration(color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200)),
     child: Row(children: [
       Container(
@@ -800,10 +1045,11 @@ class _ProfileScreenState extends State<ProfileScreen>
         child: Icon(icon, color: color, size: 16),
       ),
       const SizedBox(width: 12),
-      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
         Text(sub, style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
-      ]),
+      ])),
+      Icon(Icons.arrow_forward_ios, size: 12, color: Colors.grey.shade400),
     ]),
   );
 
@@ -829,8 +1075,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       child: Icon(icon, color: active ? color : Colors.grey.shade400, size: 20),
     ),
     const SizedBox(height: 4),
-    Text(label, style: TextStyle(
-        color: active ? color : Colors.grey.shade400,
+    Text(label, style: TextStyle(color: active ? color : Colors.grey.shade400,
         fontSize: 10, fontWeight: active ? FontWeight.bold : FontWeight.normal)),
   ]);
 

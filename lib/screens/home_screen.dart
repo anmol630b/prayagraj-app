@@ -14,6 +14,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = true;
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+  final Set<int> _loadingItems = {}; // Kaunsa product add ho raha hai track karo
 
   @override
   void initState() {
@@ -36,14 +37,28 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _addToCart(int productId) async {
+    if (_loadingItems.contains(productId)) return; // Double tap prevent karo
+
+    setState(() => _loadingItems.add(productId));
+
+    // UI turant snackbar dikhao, API background mein
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Row(children: [
+          Icon(Icons.check_circle, color: Colors.white),
+          SizedBox(width: 8),
+          Text("Cart mein add ho raha hai..."),
+        ]),
+        backgroundColor: Colors.green,
+        duration: Duration(milliseconds: 800),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+
     await ApiService.addToCart(productId, 1);
+
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Product cart mein add ho gaya ✅"),
-          backgroundColor: Colors.green,
-        ),
-      );
+      setState(() => _loadingItems.remove(productId));
     }
   }
 
@@ -133,6 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         itemBuilder: (context, index) {
                           final product = _products[index];
+                          final isAdding = _loadingItems.contains(product['id']);
                           return GestureDetector(
                             onTap: () => Navigator.push(
                               context,
@@ -184,14 +200,21 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ),
                                         const SizedBox(height: 6),
                                         ElevatedButton(
-                                          onPressed: () =>
-                                              _addToCart(product['id']),
+                                          onPressed: isAdding ? null : () => _addToCart(product['id']),
                                           style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.green,
-                                            minimumSize:
-                                                const Size(double.infinity, 36),
+                                            backgroundColor: isAdding ? Colors.grey.shade300 : Colors.green,
+                                            minimumSize: const Size(double.infinity, 36),
                                           ),
-                                          child: const Text("Add to Cart"),
+                                          child: isAdding
+                                              ? const SizedBox(
+                                                  height: 16,
+                                                  width: 16,
+                                                  child: CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                    color: Colors.green,
+                                                  ),
+                                                )
+                                              : const Text("Add to Cart"),
                                         ),
                                       ],
                                     ),

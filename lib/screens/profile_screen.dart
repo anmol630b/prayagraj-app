@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
+import '../main.dart';
 import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -616,9 +617,9 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget build(BuildContext context) {
     final username = ApiService.username;
     final email    = ApiService.email;
+    final isDark   = MyApp.of(context)?.isDark ?? false;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FA),
       body: NestedScrollView(
         headerSliverBuilder: (_, __) => [
           SliverAppBar(
@@ -663,7 +664,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         body: TabBarView(
           controller: _tabController,
           children: [
-            _overviewTab(username, email),
+            _overviewTab(username, email, isDark),
             _orderHistoryTab(),
           ],
         ),
@@ -753,7 +754,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _overviewTab(String username, String email) {
+  Widget _overviewTab(String username, String email, bool isDark) {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -807,6 +808,35 @@ class _ProfileScreenState extends State<ProfileScreen>
         _sectionLabel('Settings'),
         const SizedBox(height: 10),
         _settingsCard([
+          // Dark mode toggle
+          ListTile(
+            onTap: () {
+              MyApp.of(context)?.toggleTheme(!isDark);
+              setState(() {});
+            },
+            leading: Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                  color: Colors.deepPurple.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8)),
+              child: Icon(isDark ? Icons.dark_mode : Icons.light_mode,
+                  color: Colors.deepPurple, size: 16),
+            ),
+            title: const Text('Dark Mode',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+            subtitle: Text(isDark ? 'On' : 'Off',
+                style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
+            trailing: Switch(
+              value: isDark,
+              activeColor: Colors.deepPurple,
+              onChanged: (v) {
+                MyApp.of(context)?.toggleTheme(v);
+                setState(() {});
+              },
+            ),
+            dense: true,
+          ),
+          _divider(),
           _settingsTile(Icons.notifications_outlined, 'Notifications',
               _orderNotif || _deliveryNotif ? 'On' : 'Off', Colors.orange, _openNotifications),
           _divider(),
@@ -870,7 +900,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               margin: const EdgeInsets.only(bottom: 10),
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(14),
                 boxShadow: [BoxShadow(
                     color: Colors.black.withOpacity(0.04), blurRadius: 6)],
@@ -937,18 +967,22 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _sectionLabel(String t) => Text(t,
-      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87));
+      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold));
 
-  Widget _divider() => Divider(height: 1, color: Colors.grey.shade100, indent: 16, endIndent: 16);
+  Widget _divider() => Divider(height: 1, color: Colors.grey.shade200, indent: 16, endIndent: 16);
 
   Widget _infoCard(List<Widget> children) => Container(
-    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14),
+    decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(14),
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6)]),
     child: Column(children: children),
   );
 
   Widget _settingsCard(List<Widget> children) => Container(
-    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14),
+    decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(14),
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6)]),
     child: Column(children: children),
   );
@@ -960,7 +994,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       child: Icon(icon, color: color, size: 16),
     ),
     title: Text(label, style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
-    subtitle: Text(val, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.black87)),
+    subtitle: Text(val, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
     dense: true,
   );
 
@@ -980,7 +1014,9 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget _statCard(String val, String label, IconData icon, Color color) => Expanded(
     child: Container(
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14),
+      decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(14),
           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6)]),
       child: Column(children: [
         Container(
@@ -1014,7 +1050,8 @@ class _ProfileScreenState extends State<ProfileScreen>
   }) => Container(
     margin: const EdgeInsets.only(bottom: 10),
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-    decoration: BoxDecoration(color: Colors.grey.shade50,
+    decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200)),
     child: Row(children: [
@@ -1035,7 +1072,8 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget _contactTile(IconData icon, String title, String sub, Color color) => Container(
     margin: const EdgeInsets.only(bottom: 10),
     padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(color: Colors.grey.shade50,
+    decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200)),
     child: Row(children: [

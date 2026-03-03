@@ -9,7 +9,7 @@ class CartScreen extends StatefulWidget {
   State<CartScreen> createState() => _CartScreenState();
 }
 
-class _CartScreenState extends State<CartScreen> {
+class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
   List<dynamic> _cartItems = [];
   bool _isLoading = true;
   late Razorpay _razorpay;
@@ -18,6 +18,7 @@ class _CartScreenState extends State<CartScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadCart();
     _razorpay = Razorpay();
     _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
@@ -27,16 +28,33 @@ class _CartScreenState extends State<CartScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _razorpay.clear();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadCart();
+    }
+  }
+
+  // Tab switch hone pe bhi reload ho
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadCart();
   }
 
   void _loadCart() async {
     try {
       final items = await ApiService.getCart();
-      setState(() { _cartItems = items; _isLoading = false; });
+      if (mounted) {
+        setState(() { _cartItems = items; _isLoading = false; });
+      }
     } catch (e) {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -52,10 +70,8 @@ class _CartScreenState extends State<CartScreen> {
     final item = _cartItems[index];
     final newQty = item['quantity'] + change;
     if (newQty <= 0) {
-      // Remove from cart
       await ApiService.removeFromCart(item['id']);
     } else {
-      // Update quantity
       await ApiService.updateCartQuantity(item['id'], newQty);
     }
     _loadCart();
@@ -101,7 +117,6 @@ class _CartScreenState extends State<CartScreen> {
 
   void _openRazorpay(String address) async {
     _deliveryAddress = address;
-    // Razorpay key backend se lao
     final payment = await ApiService.createPayment(_getTotal().toInt());
     var options = {
       'key': payment['key'] ?? '',
@@ -274,7 +289,6 @@ class _CartScreenState extends State<CartScreen> {
                                     ],
                                   ),
                                 ),
-                                // Quantity +/- buttons
                                 Row(
                                   children: [
                                     GestureDetector(
@@ -352,8 +366,7 @@ class _CartScreenState extends State<CartScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text('${_cartItems.length} items',
-                                  style:
-                                      TextStyle(color: Colors.grey.shade600)),
+                                  style: TextStyle(color: Colors.grey.shade600)),
                               Text(
                                 'Total: ₹${_getTotal().toStringAsFixed(0)}',
                                 style: TextStyle(
@@ -369,8 +382,7 @@ class _CartScreenState extends State<CartScreen> {
                             height: 52,
                             child: ElevatedButton.icon(
                               onPressed: _placeOrder,
-                              icon: const Icon(Icons.payment,
-                                  color: Colors.white),
+                              icon: const Icon(Icons.payment, color: Colors.white),
                               label: const Text('Pay & Order karo',
                                   style: TextStyle(
                                       fontSize: 17,

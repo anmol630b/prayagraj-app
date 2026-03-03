@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const String baseUrl = 'https://web-production-d08a8.up.railway.app/api';
 
@@ -13,6 +14,36 @@ class ApiService {
   static String get username => _username;
   static String get email => _email;
 
+  static Future<void> saveSession(String token, String username, String email) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('token', token);
+    await prefs.setString('username', username);
+    await prefs.setString('email', email);
+    _token = token;
+    _username = username;
+    _email = email;
+  }
+
+  static Future<bool> loadSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+    if (token.isNotEmpty) {
+      _token = token;
+      _username = prefs.getString('username') ?? '';
+      _email = prefs.getString('email') ?? '';
+      return true;
+    }
+    return false;
+  }
+
+  static Future<void> clearSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    _token = '';
+    _username = '';
+    _email = '';
+  }
+
   static Future<Map<String, dynamic>> login(String username, String password) async {
     final response = await http.post(
       Uri.parse('$baseUrl/token/'),
@@ -21,8 +52,7 @@ class ApiService {
     );
     final data = jsonDecode(response.body);
     if (data.containsKey('access')) {
-      _token = data['access'];
-      _username = username;
+      await saveSession(data['access'], username, '');
     }
     return data;
   }
@@ -50,69 +80,119 @@ class ApiService {
     if (minPrice != null) url += 'min_price=$minPrice&';
     if (maxPrice != null) url += 'max_price=$maxPrice&';
     if (sort != null) url += 'sort=$sort&';
-    final response = await http.get(Uri.parse(url), headers: {'Authorization': 'Bearer $_token'});
+    final response = await http.get(Uri.parse(url),
+        headers: {'Authorization': 'Bearer $_token'});
     return jsonDecode(response.body);
   }
 
   static Future<List<dynamic>> getCategories() async {
-    final response = await http.get(Uri.parse('$baseUrl/categories/'), headers: {'Authorization': 'Bearer $_token'});
+    final response = await http.get(Uri.parse('$baseUrl/categories/'),
+        headers: {'Authorization': 'Bearer $_token'});
     return jsonDecode(response.body);
   }
 
   static Future<List<dynamic>> getCart() async {
-    final response = await http.get(Uri.parse('$baseUrl/cart/'), headers: {'Authorization': 'Bearer $_token'});
+    final response = await http.get(Uri.parse('$baseUrl/cart/'),
+        headers: {'Authorization': 'Bearer $_token'});
     return jsonDecode(response.body);
   }
 
   static Future<bool> addToCart(int productId, int quantity) async {
     final response = await http.post(
       Uri.parse('$baseUrl/cart/'),
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $_token'
+      },
       body: jsonEncode({'product': productId, 'quantity': quantity}),
     );
     return response.statusCode == 201;
+  }
+
+  // Cart item quantity update karo
+  static Future<bool> updateCartQuantity(int cartItemId, int quantity) async {
+    final response = await http.patch(
+      Uri.parse('$baseUrl/cart/'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $_token'
+      },
+      body: jsonEncode({'cart_id': cartItemId, 'quantity': quantity}),
+    );
+    return response.statusCode == 200;
+  }
+
+  // Cart item remove karo
+  static Future<bool> removeFromCart(int cartItemId) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/cart/'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $_token'
+      },
+      body: jsonEncode({'cart_id': cartItemId}),
+    );
+    return response.statusCode == 200;
   }
 
   static Future<bool> placeOrder(String address) async {
     String? fcmToken = await FirebaseMessaging.instance.getToken();
     final response = await http.post(
       Uri.parse('$baseUrl/orders/'),
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $_token'
+      },
       body: jsonEncode({'address': address, 'fcm_token': fcmToken}),
     );
     return response.statusCode == 201;
   }
 
   static Future<List<dynamic>> getOrders() async {
-    final response = await http.get(Uri.parse('$baseUrl/orders/'), headers: {'Authorization': 'Bearer $_token'});
+    final response = await http.get(Uri.parse('$baseUrl/orders/'),
+        headers: {'Authorization': 'Bearer $_token'});
     return jsonDecode(response.body);
   }
 
   static Future<Map<String, dynamic>> trackOrder(int orderId) async {
-    final response = await http.get(Uri.parse('$baseUrl/orders/$orderId/tracking/'), headers: {'Authorization': 'Bearer $_token'});
+    final response = await http.get(
+        Uri.parse('$baseUrl/orders/$orderId/tracking/'),
+        headers: {'Authorization': 'Bearer $_token'});
     return jsonDecode(response.body);
   }
 
   static Future<Map<String, dynamic>> createPayment(int amount) async {
     final response = await http.post(
       Uri.parse('$baseUrl/payment/create/'),
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $_token'
+      },
       body: jsonEncode({'amount': amount}),
     );
     return jsonDecode(response.body);
   }
 
-  static Future<bool> verifyPayment(String paymentId, String orderId, String signature) async {
+  static Future<bool> verifyPayment(
+      String paymentId, String orderId, String signature) async {
     final response = await http.post(
       Uri.parse('$baseUrl/payment/verify/'),
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
-      body: jsonEncode({'razorpay_payment_id': paymentId, 'razorpay_order_id': orderId, 'razorpay_signature': signature}),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $_token'
+      },
+      body: jsonEncode({
+        'razorpay_payment_id': paymentId,
+        'razorpay_order_id': orderId,
+        'razorpay_signature': signature
+      }),
     );
     return jsonDecode(response.body)['status'] == 'success';
   }
 
   static Future<Map<String, dynamic>> getAgentStatus() async {
-    final response = await http.get(Uri.parse('$baseUrl/agent/status/'), headers: {'Authorization': 'Bearer $_token'});
+    final response = await http.get(Uri.parse('$baseUrl/agent/status/'),
+        headers: {'Authorization': 'Bearer $_token'});
     return jsonDecode(response.body);
   }
 }

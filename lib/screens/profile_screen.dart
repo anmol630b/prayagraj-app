@@ -51,11 +51,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Text('Cancel', style: TextStyle(color: Colors.grey.shade600)),
           ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pushAndRemoveUntil(context,
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                  (route) => false);
+            onPressed: () async {
+              await ApiService.clearSession(); // Token delete karo
+              if (context.mounted) {
+                Navigator.pushAndRemoveUntil(context,
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    (route) => false);
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
@@ -77,7 +79,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: const Color(0xFFF5F7FA),
       body: CustomScrollView(
         slivers: [
-          // ── Hero Header ──
           SliverAppBar(
             expandedHeight: 220,
             pinned: true,
@@ -132,7 +133,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           style: const TextStyle(
                               color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 2),
-                      Text(email.isNotEmpty ? email : 'user@prayagraj.com',
+                      Text(email.isNotEmpty ? email : 'Prayagraj Delivery User',
                           style: const TextStyle(color: Colors.white70, fontSize: 13)),
                     ],
                   ),
@@ -158,7 +159,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // ── Stats Row ──
                         Row(
                           children: [
                             _statCard('${_orders.length}', 'Total Orders', Icons.receipt_long, Colors.blue.shade600),
@@ -169,8 +169,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ],
                         ),
                         const SizedBox(height: 12),
-
-                        // ── Total Spent ──
                         Container(
                           padding: const EdgeInsets.all(18),
                           decoration: BoxDecoration(
@@ -209,15 +207,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         const SizedBox(height: 20),
-
-                        // ── Account Info ──
                         const Text('Account Info', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
                         const SizedBox(height: 10),
                         _infoTile(Icons.person, 'Username', username, Colors.blue),
                         _infoTile(Icons.email, 'Email', email.isNotEmpty ? email : 'N/A', Colors.purple),
                         const SizedBox(height: 20),
-
-                        // ── Settings ──
                         const Text('Settings', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
                         const SizedBox(height: 10),
                         _menuTile(Icons.notifications_outlined, 'Notifications', 'Push notifications on hain', Colors.orange),
@@ -226,8 +220,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         _menuTile(Icons.star_outline, 'Rate App', 'Hamara app rate karo', Colors.amber),
                         _menuTile(Icons.info_outline, 'App Version', 'v1.0.0 — Latest', Colors.grey),
                         const SizedBox(height: 20),
-
-                        // ── Logout Button ──
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton.icon(

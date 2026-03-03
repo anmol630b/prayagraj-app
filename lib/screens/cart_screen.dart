@@ -48,6 +48,19 @@ class _CartScreenState extends State<CartScreen> {
     return total;
   }
 
+  void _updateQuantity(int index, int change) async {
+    final item = _cartItems[index];
+    final newQty = item['quantity'] + change;
+    if (newQty <= 0) {
+      // Remove from cart
+      await ApiService.removeFromCart(item['id']);
+    } else {
+      // Update quantity
+      await ApiService.updateCartQuantity(item['id'], newQty);
+    }
+    _loadCart();
+  }
+
   void _handlePaymentSuccess(PaymentSuccessResponse response) async {
     final success = await ApiService.placeOrder(_deliveryAddress);
     if (mounted && success) {
@@ -86,11 +99,14 @@ class _CartScreenState extends State<CartScreen> {
 
   void _handleExternalWallet(ExternalWalletResponse response) {}
 
-  void _openRazorpay(String address) {
+  void _openRazorpay(String address) async {
     _deliveryAddress = address;
+    // Razorpay key backend se lao
+    final payment = await ApiService.createPayment(_getTotal().toInt());
     var options = {
-      'key': 'rzp_test_SLkDH5I8tf4nZn',
+      'key': payment['key'] ?? '',
       'amount': (_getTotal() * 100).toInt(),
+      'order_id': payment['order_id'] ?? '',
       'name': 'Prayagraj Delivery',
       'description': 'Food Order',
       'prefill': {'contact': '9999999999', 'email': 'test@test.com'},
@@ -113,7 +129,8 @@ class _CartScreenState extends State<CartScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Delivery Address', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Delivery Address',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             TextField(
               controller: addressController,
@@ -134,12 +151,19 @@ class _CartScreenState extends State<CartScreen> {
               height: 52,
               child: ElevatedButton.icon(
                 onPressed: () {
+                  if (addressController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Address daalo pehle!')),
+                    );
+                    return;
+                  }
                   Navigator.pop(context);
-                  _openRazorpay(addressController.text);
+                  _openRazorpay(addressController.text.trim());
                 },
                 icon: const Icon(Icons.payment, color: Colors.white),
                 label: Text('Pay ₹${_getTotal().toStringAsFixed(0)}',
-                    style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                    style: const TextStyle(
+                        fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green.shade700,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -158,10 +182,20 @@ class _CartScreenState extends State<CartScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        title: const Text('My Cart 🛒', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('My Cart 🛒',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.green.shade700,
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              setState(() => _isLoading = true);
+              _loadCart();
+            },
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.green))
@@ -170,18 +204,17 @@ class _CartScreenState extends State<CartScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.shopping_cart_outlined, size: 100, color: Colors.grey.shade300),
+                      Icon(Icons.shopping_cart_outlined,
+                          size: 100, color: Colors.grey.shade300),
                       const SizedBox(height: 16),
-                      const Text('Cart khali hai!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.grey)),
+                      const Text('Cart khali hai!',
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey)),
                       const SizedBox(height: 8),
-                      Text('Kuch products add karo', style: TextStyle(color: Colors.grey.shade500)),
-                      const SizedBox(height: 24),
-                      ElevatedButton.icon(
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.shopping_bag_outlined),
-                        label: const Text('Shopping karo'),
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade700, foregroundColor: Colors.white),
-                      ),
+                      Text('Kuch products add karo',
+                          style: TextStyle(color: Colors.grey.shade500)),
                     ],
                   ),
                 )
@@ -193,39 +226,109 @@ class _CartScreenState extends State<CartScreen> {
                         itemCount: _cartItems.length,
                         itemBuilder: (context, index) {
                           final item = _cartItems[index];
-                          final itemTotal = double.parse(item['product_price'].toString()) * item['quantity'];
+                          final itemTotal =
+                              double.parse(item['product_price'].toString()) *
+                                  item['quantity'];
                           return Container(
                             margin: const EdgeInsets.only(bottom: 10),
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(14),
-                              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 6)],
+                              boxShadow: [
+                                BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 6)
+                              ],
                             ),
                             child: Row(
                               children: [
                                 Container(
-                                  width: 50, height: 50,
+                                  width: 55,
+                                  height: 55,
                                   decoration: BoxDecoration(
                                     color: Colors.green.shade50,
                                     borderRadius: BorderRadius.circular(10),
                                   ),
-                                  child: Icon(Icons.shopping_bag, color: Colors.green.shade400),
+                                  child: Icon(Icons.shopping_bag,
+                                      color: Colors.green.shade400),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(item['product_name'] ?? 'Product',
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                                      Text('₹${item['product_price']} × ${item['quantity']}',
-                                          style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+                                      Text(
+                                        item['product_name'] ?? 'Product',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '₹${item['product_price']}',
+                                        style: TextStyle(
+                                            color: Colors.grey.shade500,
+                                            fontSize: 13),
+                                      ),
                                     ],
                                   ),
                                 ),
-                                Text('₹${itemTotal.toStringAsFixed(0)}',
-                                    style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.bold, fontSize: 16)),
+                                // Quantity +/- buttons
+                                Row(
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () => _updateQuantity(index, -1),
+                                      child: Container(
+                                        width: 30,
+                                        height: 30,
+                                        decoration: BoxDecoration(
+                                          color: Colors.red.shade50,
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(
+                                              color: Colors.red.shade200),
+                                        ),
+                                        child: Icon(Icons.remove,
+                                            size: 16,
+                                            color: Colors.red.shade400),
+                                      ),
+                                    ),
+                                    Container(
+                                      width: 36,
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        '${item['quantity']}',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16),
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () => _updateQuantity(index, 1),
+                                      child: Container(
+                                        width: 30,
+                                        height: 30,
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.shade50,
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(
+                                              color: Colors.green.shade300),
+                                        ),
+                                        child: Icon(Icons.add,
+                                            size: 16,
+                                            color: Colors.green.shade600),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  '₹${itemTotal.toStringAsFixed(0)}',
+                                  style: TextStyle(
+                                      color: Colors.green.shade700,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15),
+                                ),
                               ],
                             ),
                           );
@@ -236,16 +339,28 @@ class _CartScreenState extends State<CartScreen> {
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 10, offset: const Offset(0, -4))],
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 10,
+                              offset: const Offset(0, -4))
+                        ],
                       ),
                       child: Column(
                         children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('${_cartItems.length} items', style: TextStyle(color: Colors.grey.shade600)),
-                              Text('Total: ₹${_getTotal().toStringAsFixed(0)}',
-                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green.shade700)),
+                              Text('${_cartItems.length} items',
+                                  style:
+                                      TextStyle(color: Colors.grey.shade600)),
+                              Text(
+                                'Total: ₹${_getTotal().toStringAsFixed(0)}',
+                                style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green.shade700),
+                              ),
                             ],
                           ),
                           const SizedBox(height: 12),
@@ -254,12 +369,17 @@ class _CartScreenState extends State<CartScreen> {
                             height: 52,
                             child: ElevatedButton.icon(
                               onPressed: _placeOrder,
-                              icon: const Icon(Icons.payment, color: Colors.white),
+                              icon: const Icon(Icons.payment,
+                                  color: Colors.white),
                               label: const Text('Pay & Order karo',
-                                  style: TextStyle(fontSize: 17, color: Colors.white, fontWeight: FontWeight.bold)),
+                                  style: TextStyle(
+                                      fontSize: 17,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold)),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.green.shade700,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
                               ),
                             ),
                           ),

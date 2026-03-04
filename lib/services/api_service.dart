@@ -284,4 +284,21 @@ class ApiService {
       headers: {'Authorization': 'Bearer $_token'},
     );
   }
+
+  static Future<Map<String, dynamic>> getProductRatings(int productId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/products/$productId/ratings/'),
+      headers: {'Authorization': 'Bearer $_token'},
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> addRating(int productId, int orderId, int stars, String review) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/products/$productId/ratings/'),
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
+      body: jsonEncode({'order_id': orderId, 'stars': stars, 'review': review}),
+    );
+    return jsonDecode(response.body);
+  }
 }

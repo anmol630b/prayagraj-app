@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import 'package:flutter/material.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final dynamic product;
@@ -12,6 +13,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int _quantity   = 1;
   bool _isLoading = false;
   bool _wishlisted = false;
+  double _avgRating = 0;
+  int _totalRatings = 0;
+  List<dynamic> _ratings = [];
+  bool _ratingsLoaded = false;
 
   double get _total =>
       double.parse(widget.product['price'].toString()) * _quantity;
@@ -228,14 +233,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   const SizedBox(height: 16),
                   Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
                     Column(children: [
-                      Text('4.5',
+                      Text(_ratingsLoaded ? _avgRating.toStringAsFixed(1) : '0.0',
                           style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold,
                               color: Colors.grey.shade800)),
                       Row(children: List.generate(5, (i) => Icon(
                           i < 4 ? Icons.star : Icons.star_half,
                           color: Colors.amber, size: 16))),
                       const SizedBox(height: 4),
-                      Text('128 ratings',
+                      Text('$_totalRatings ratings',
                           style: TextStyle(color: Colors.grey.shade400, fontSize: 11)),
                     ]),
                     const SizedBox(width: 20),

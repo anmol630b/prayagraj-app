@@ -56,6 +56,9 @@ class ApiService {
       final email = data['email'] ?? '';       // ✅ email ab save hoti hai
       final uname = data['username'] ?? username;
       await saveSession(data['access'], uname, email);
+      FirebaseMessaging messaging = FirebaseMessaging.instance;
+      String? fcmToken = await messaging.getToken();
+      if (fcmToken != null) await saveFCMToken(fcmToken);
     }
     return data;
   }

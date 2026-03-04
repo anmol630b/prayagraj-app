@@ -11,6 +11,7 @@ class CartScreen extends StatefulWidget {
 class CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
   List<dynamic> _cartItems = [];
   bool _isLoading = true;
+  String _defaultAddress = '';
   late Razorpay _razorpay;
   String _deliveryAddress = '';
 
@@ -40,6 +41,19 @@ class CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) _loadCart();
+  }
+
+  Future<void> _loadDefaultAddress() async {
+    try {
+      final addresses = await ApiService.getSavedAddresses();
+      final defaultAddr = addresses.firstWhere(
+        (a) => a['is_default'] == true,
+        orElse: () => addresses.isNotEmpty ? addresses[0] : null,
+      );
+      if (defaultAddr != null && mounted) {
+        _defaultAddress = defaultAddr['address'];
+      }
+    } catch (e) {}
   }
 
   void loadCart() => _loadCart();
@@ -131,8 +145,9 @@ class CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
     _razorpay.open(options);
   }
 
-  void _placeOrder() {
-    final addressController = TextEditingController();
+  void _placeOrder() async {
+    await _loadDefaultAddress();
+    final addressController = TextEditingController(text: _defaultAddress);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

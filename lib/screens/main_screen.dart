@@ -14,22 +14,21 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const CartScreen(),
-    const OrderScreen(),
-    const ProfileScreen(),
-  ];
-
-  void _onTabTapped(int index) {
-    setState(() => _currentIndex = index);
-  }
+  final GlobalKey<CartScreenState> _cartKey = GlobalKey<CartScreenState>();
+  final GlobalKey<OrderScreenState> _orderKey = GlobalKey<OrderScreenState>();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // IndexedStack hata ke direct screen show karo
-      body: _screens[_currentIndex],
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          const HomeScreen(),
+          CartScreen(key: _cartKey),
+          OrderScreen(key: _orderKey),
+          const ProfileScreen(),
+        ],
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [
@@ -41,7 +40,11 @@ class _MainScreenState extends State<MainScreen> {
         ),
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
-          onTap: _onTabTapped,
+          onTap: (index) {
+            setState(() => _currentIndex = index);
+            if (index == 1) _cartKey.currentState?.loadCart();
+            if (index == 2) _orderKey.currentState?.loadOrders();
+          },
           type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.white,
           selectedItemColor: Colors.green.shade700,

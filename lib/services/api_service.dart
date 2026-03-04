@@ -44,6 +44,7 @@ class ApiService {
     _email = '';
   }
 
+  // ✅ FIX 1: Login mein email bhi save hota hai ab
   static Future<Map<String, dynamic>> login(String username, String password) async {
     final response = await http.post(
       Uri.parse('$baseUrl/token/'),
@@ -52,7 +53,9 @@ class ApiService {
     );
     final data = jsonDecode(response.body);
     if (data.containsKey('access')) {
-      await saveSession(data['access'], username, '');
+      final email = data['email'] ?? '';       // ✅ email ab save hoti hai
+      final uname = data['username'] ?? username;
+      await saveSession(data['access'], uname, email);
     }
     return data;
   }
@@ -133,7 +136,13 @@ class ApiService {
     return response.statusCode == 200;
   }
 
-  static Future<bool> placeOrder(String address) async {
+  // ✅ FIX 2: placeOrder mein payment details bhi bhejo — Django verify karega
+  static Future<bool> placeOrder(
+    String address, {
+    required String paymentId,
+    required String razorpayOrderId,
+    required String signature,
+  }) async {
     String? fcmToken = await FirebaseMessaging.instance.getToken();
     final response = await http.post(
       Uri.parse('$baseUrl/orders/'),
@@ -141,7 +150,13 @@ class ApiService {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $_token'
       },
-      body: jsonEncode({'address': address, 'fcm_token': fcmToken}),
+      body: jsonEncode({
+        'address': address,
+        'fcm_token': fcmToken,
+        'razorpay_payment_id': paymentId,       // ✅ payment verify hoga
+        'razorpay_order_id': razorpayOrderId,
+        'razorpay_signature': signature,
+      }),
     );
     return response.statusCode == 201;
   }

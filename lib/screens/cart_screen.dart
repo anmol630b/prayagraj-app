@@ -5,14 +5,19 @@ import '../services/api_service.dart';
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
   @override
-  State<CartScreen> createState() => _CartScreenState();
+  State<CartScreen> createState() => CartScreenState();
 }
 
-class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
+class CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
   List<dynamic> _cartItems = [];
   bool _isLoading = true;
   late Razorpay _razorpay;
   String _deliveryAddress = '';
+
+  // ✅ FIX: Payment details store karo order place karne ke liye
+  String _paymentId = '';
+  String _razorpayOrderId = '';
+  String _signature = '';
 
   @override
   void initState() {
@@ -36,6 +41,8 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) _loadCart();
   }
+
+  void loadCart() => _loadCart();
 
   void _loadCart() async {
     try {
@@ -65,8 +72,19 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
     else await ApiService.updateCartQuantity(item['id'], newQty);
   }
 
+  // ✅ FIX: Payment success mein details save karo, phir order place karo
   void _handlePaymentSuccess(PaymentSuccessResponse response) async {
-    final success = await ApiService.placeOrder(_deliveryAddress);
+    _paymentId      = response.paymentId ?? '';
+    _razorpayOrderId = response.orderId ?? '';
+    _signature      = response.signature ?? '';
+
+    final success = await ApiService.placeOrder(
+      _deliveryAddress,
+      paymentId: _paymentId,
+      razorpayOrderId: _razorpayOrderId,
+      signature: _signature,
+    );
+
     if (mounted && success) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: const Row(children: [
@@ -127,7 +145,6 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
             left: 24, right: 24, top: 24),
         child: Column(mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start, children: [
-          // Header
           Row(children: [
             Container(
               padding: const EdgeInsets.all(8),
@@ -167,7 +184,6 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
           ),
           const SizedBox(height: 16),
 
-          // Price summary
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
@@ -232,7 +248,6 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
       body: SafeArea(
         child: Column(children: [
 
-          // ── Header ─────────────────────────────────────────
           Container(
             color: Colors.white,
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
@@ -269,7 +284,6 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
 
           Container(height: 1, color: Colors.grey.shade200),
 
-          // ── Body ───────────────────────────────────────────
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator(color: Colors.green))
@@ -294,7 +308,7 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
                           final item      = _cartItems[index];
                           final itemTotal = double.parse(
                               item['product_price'].toString()) * item['quantity'];
-                          final imageUrl  = item['product_image'];
+                          final imageUrl  = item['product_image']; // ✅ ab aayega
 
                           return Container(
                             margin: const EdgeInsets.only(bottom: 10),
@@ -308,7 +322,6 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
                             child: Padding(
                               padding: const EdgeInsets.all(12),
                               child: Row(children: [
-                                // Product image
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(10),
                                   child: SizedBox(
@@ -320,8 +333,6 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
                                   ),
                                 ),
                                 const SizedBox(width: 12),
-
-                                // Name + price
                                 Expanded(child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
@@ -342,7 +353,6 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
 
                                 const SizedBox(width: 8),
 
-                                // Quantity controls
                                 Container(
                                   decoration: BoxDecoration(
                                     border: Border.all(color: Colors.grey.shade200),
@@ -387,14 +397,11 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
                       ),
           ),
 
-          // ── Bottom Bar ──────────────────────────────────────
           if (!_isLoading && _cartItems.isNotEmpty)
             Container(
               color: Colors.white,
               child: Column(children: [
                 Container(height: 1, color: Colors.grey.shade100),
-
-                // Bill summary
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                   child: Column(children: [
@@ -406,8 +413,6 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
                         Colors.black87, bold: true),
                   ]),
                 ),
-
-                // Pay button
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                   child: SizedBox(

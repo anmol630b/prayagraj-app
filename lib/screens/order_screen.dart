@@ -4,10 +4,10 @@ import '../services/api_service.dart';
 class OrderScreen extends StatefulWidget {
   const OrderScreen({super.key});
   @override
-  State<OrderScreen> createState() => _OrderScreenState();
+  State<OrderScreen> createState() => OrderScreenState();
 }
 
-class _OrderScreenState extends State<OrderScreen> {
+class OrderScreenState extends State<OrderScreen> {
   List<dynamic> _orders = [];
   bool _isLoading = true;
 
@@ -16,6 +16,8 @@ class _OrderScreenState extends State<OrderScreen> {
     super.initState();
     _loadOrders();
   }
+
+  void loadOrders() => _loadOrders();
 
   void _loadOrders() async {
     try {

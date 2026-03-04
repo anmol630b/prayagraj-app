@@ -301,4 +301,14 @@ class ApiService {
     );
     return jsonDecode(response.body);
   }
+
+  static Future<void> saveFCMToken(String token) async {
+    try {
+      await http.post(
+        Uri.parse('$baseUrl/fcm-token/'),
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
+        body: jsonEncode({'token': token}),
+      );
+    } catch (e) {}
+  }
 }

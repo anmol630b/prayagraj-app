@@ -21,6 +21,7 @@ void main() async {
   await messaging.requestPermission();
 
   String? token = await messaging.getToken();
+  if (token != null) await ApiService.saveFCMToken(token);
   print('FCM Token: $token');
 
   final isLoggedIn = await ApiService.loadSession();

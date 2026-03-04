@@ -30,8 +30,15 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       setState(() => _isLoading = false);
       if (result.containsKey('access')) {
-        Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (_) => const MainScreen()));
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => const MainScreen(),
+            transitionsBuilder: (_, animation, __, child) =>
+                FadeTransition(opacity: animation, child: child),
+            transitionDuration: const Duration(milliseconds: 400),
+          ),
+        );
       } else {
         setState(() => _errorMessage = 'Username ya password galat hai!');
       }

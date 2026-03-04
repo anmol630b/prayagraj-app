@@ -314,4 +314,28 @@ class ApiService {
       );
     } catch (e) {}
   }
+
+  static Future<List<dynamic>> getWishlist() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/wishlist/'),
+      headers: {'Authorization': 'Bearer $_token'},
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> toggleWishlist(int productId, bool wishlisted) async {
+    if (wishlisted) {
+      await http.delete(
+        Uri.parse('$baseUrl/wishlist/$productId/'),
+        headers: {'Authorization': 'Bearer $_token'},
+      );
+      return {'wishlisted': false};
+    } else {
+      final response = await http.post(
+        Uri.parse('$baseUrl/wishlist/$productId/'),
+        headers: {'Authorization': 'Bearer $_token'},
+      );
+      return jsonDecode(response.body);
+    }
+  }
 }

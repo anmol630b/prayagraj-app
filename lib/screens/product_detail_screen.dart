@@ -21,7 +21,40 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   double get _total =>
       double.parse(widget.product['price'].toString()) * _quantity;
 
+
   @override
+  void initState() {
+    super.initState();
+    _loadRatings();
+    _loadWishlistStatus();
+  }
+
+  void _toggleWishlist() async {
+    final result = await ApiService.toggleWishlist(widget.product['id'], _wishlisted);
+    if (mounted) setState(() => _wishlisted = result['wishlisted'] ?? false);
+  }
+
+  Future<void> _loadWishlistStatus() async {
+    try {
+      final wishlist = await ApiService.getWishlist();
+      final isWishlisted = wishlist.any((w) => w['product_id'] == widget.product['id']);
+      if (mounted) setState(() => _wishlisted = isWishlisted);
+    } catch (e) {}
+  }
+
+  void _loadRatings() async {
+    try {
+      final data = await ApiService.getProductRatings(widget.product['id']);
+      if (mounted) setState(() {
+        _avgRating = (data['average'] ?? 0).toDouble();
+        _totalRatings = data['total'] ?? 0;
+        _ratings = data['ratings'] ?? [];
+        _ratingsLoaded = true;
+      });
+    } catch (e) {}
+  }
+
+    @override
   Widget build(BuildContext context) {
     final p           = widget.product;
     final imageUrl    = p['image_url'];
@@ -67,7 +100,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   top: MediaQuery.of(context).padding.top + 8,
                   right: 12,
                   child: GestureDetector(
-                    onTap: () => setState(() => _wishlisted = !_wishlisted),
+                    onTap: () => _toggleWishlist(),
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(color: Colors.white,

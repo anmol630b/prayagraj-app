@@ -4,6 +4,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 import '../main.dart';
 import 'login_screen.dart';
+import 'chat_screen.dart';
+import 'addresses_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -377,6 +379,14 @@ class _ProfileScreenState extends State<ProfileScreen>
           _divider(),
           _settingTile(Icons.lock_outline, 'Change Password',
               'Password badlo', Colors.indigo, _openChangePassword),
+          _divider(),
+          _settingTile(Icons.location_on_outlined, 'Saved Addresses',
+              'Apne addresses manage karo', Colors.orange, () => Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const AddressesScreen()))),
+          _divider(),
+          _settingTile(Icons.chat_outlined, 'Chat Support',
+              'Support se baat karo', Colors.green, () => Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const ChatScreen()))),
           _divider(),
           _settingTile(Icons.help_outline, 'Help & Support',
               'Call, Email, WhatsApp', Colors.blue, _openHelp),

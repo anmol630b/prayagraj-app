@@ -240,4 +240,48 @@ class ApiService {
         headers: {'Authorization': 'Bearer $_token'});
     return jsonDecode(response.body);
   }
+
+  static Future<List<dynamic>> getChatMessages() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/chat/'),
+      headers: {'Authorization': 'Bearer $_token'},
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> sendChatMessage(String message) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/chat/'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $_token',
+      },
+      body: jsonEncode({'message': message}),
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<List<dynamic>> getSavedAddresses() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/addresses/'),
+      headers: {'Authorization': 'Bearer $_token'},
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> addSavedAddress(String label, String address, bool isDefault) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/addresses/'),
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
+      body: jsonEncode({'label': label, 'address': address, 'is_default': isDefault}),
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<void> deleteSavedAddress(int id) async {
+    await http.delete(
+      Uri.parse('$baseUrl/addresses/$id/'),
+      headers: {'Authorization': 'Bearer $_token'},
+    );
+  }
 }

@@ -3,44 +3,66 @@ import 'login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
-
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnim;
-  late Animation<double> _scaleAnim;
+    with TickerProviderStateMixin {
+  late AnimationController _logoController;
+  late AnimationController _textController;
+  late AnimationController _loadingController;
+
+  late Animation<double> _logoScale;
+  late Animation<double> _logoFade;
+  late Animation<double> _textFade;
+  late Animation<Offset> _textSlide;
+  late Animation<double> _loadingFade;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
 
-    _fadeAnim = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
+    // Logo animation
+    _logoController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 900));
+    _logoScale = Tween<double>(begin: 0.5, end: 1.0).animate(
+        CurvedAnimation(parent: _logoController, curve: Curves.elasticOut));
+    _logoFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: _logoController, curve: Curves.easeIn));
 
-    _scaleAnim = Tween<double>(begin: 0.6, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
-    );
+    // Text animation
+    _textController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 600));
+    _textFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: _textController, curve: Curves.easeIn));
+    _textSlide = Tween<Offset>(
+            begin: const Offset(0, 0.3), end: Offset.zero)
+        .animate(CurvedAnimation(
+            parent: _textController, curve: Curves.easeOut));
 
-    _controller.forward();
+    // Loading animation
+    _loadingController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 400));
+    _loadingFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: _loadingController, curve: Curves.easeIn));
 
+    // Start sequence
+    _logoController.forward().then((_) {
+      _textController.forward().then((_) {
+        _loadingController.forward();
+      });
+    });
+
+    // Navigate after 3 seconds
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
         Navigator.pushReplacement(
           context,
           PageRouteBuilder(
             pageBuilder: (_, __, ___) => const LoginScreen(),
-            transitionsBuilder: (_, animation, __, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
+            transitionsBuilder: (_, animation, __, child) =>
+                FadeTransition(opacity: animation, child: child),
             transitionDuration: const Duration(milliseconds: 600),
           ),
         );
@@ -50,7 +72,9 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
-    _controller.dispose();
+    _logoController.dispose();
+    _textController.dispose();
+    _loadingController.dispose();
     super.dispose();
   }
 
@@ -58,84 +82,145 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
+        width: double.infinity,
+        height: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.green.shade900, Colors.green.shade600, Colors.green.shade400],
+            colors: [Colors.green.shade900, Colors.green.shade600],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
         child: SafeArea(
-          child: Center(
-            child: FadeTransition(
-              opacity: _fadeAnim,
-              child: ScaleTransition(
-                scale: _scaleAnim,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+
+              const Spacer(flex: 2),
+
+              // ── Logo ──────────────────────────────────────
+              FadeTransition(
+                opacity: _logoFade,
+                child: ScaleTransition(
+                  scale: _logoScale,
+                  child: Stack(alignment: Alignment.center, children: [
+                    // Outer glow circle
                     Container(
-                      padding: const EdgeInsets.all(24),
+                      width: 160, height: 160,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
                         shape: BoxShape.circle,
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.delivery_dining,
-                          size: 80,
-                          color: Colors.green.shade700,
-                        ),
+                        color: Colors.white.withOpacity(0.08),
                       ),
                     ),
-                    const SizedBox(height: 32),
-                    const Text(
-                      'Prayagraj Delivery',
-                      style: TextStyle(
+                    // Middle circle
+                    Container(
+                      width: 130, height: 130,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withOpacity(0.12),
+                      ),
+                    ),
+                    // White inner circle
+                    Container(
+                      width: 100, height: 100,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
                         color: Colors.white,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
                       ),
+                      child: Icon(Icons.shopping_cart_outlined,
+                          size: 50, color: Colors.green.shade700),
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Ghar baithe mangao! 🏠',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 60),
-                    SizedBox(
-                      width: 40,
-                      height: 40,
-                      child: CircularProgressIndicator(
-                        color: Colors.white.withOpacity(0.7),
-                        strokeWidth: 3,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Loading...',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.6),
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
+                  ]),
                 ),
               ),
-            ),
+
+              const SizedBox(height: 36),
+
+              // ── App name + tagline ─────────────────────────
+              FadeTransition(
+                opacity: _textFade,
+                child: SlideTransition(
+                  position: _textSlide,
+                  child: Column(children: [
+                    const Text('Prayagraj Delivery',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        )),
+                    const SizedBox(height: 8),
+                    Text('Ghar baithe fresh saman mangao 🏠',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.75),
+                          fontSize: 15,
+                        )),
+                    const SizedBox(height: 24),
+
+                    // Feature pills
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _pill(Icons.local_shipping_outlined, 'Free Delivery'),
+                        const SizedBox(width: 10),
+                        _pill(Icons.access_time_outlined, '30 min'),
+                        const SizedBox(width: 10),
+                        _pill(Icons.verified_outlined, 'Fresh'),
+                      ],
+                    ),
+                  ]),
+                ),
+              ),
+
+              const Spacer(flex: 2),
+
+              // ── Loading indicator ─────────────────────────
+              FadeTransition(
+                opacity: _loadingFade,
+                child: Column(children: [
+                  SizedBox(
+                    width: 36, height: 36,
+                    child: CircularProgressIndicator(
+                      color: Colors.white.withOpacity(0.8),
+                      strokeWidth: 2.5,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text('Loading...',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.5),
+                        fontSize: 13,
+                      )),
+                ]),
+              ),
+
+              const SizedBox(height: 40),
+
+              // Version
+              Text('v1.0.0',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.3),
+                    fontSize: 11,
+                  )),
+              const SizedBox(height: 16),
+            ],
           ),
         ),
       ),
     );
   }
+
+  Widget _pill(IconData icon, String label) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+    decoration: BoxDecoration(
+      color: Colors.white.withOpacity(0.12),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: Colors.white.withOpacity(0.2)),
+    ),
+    child: Row(mainAxisSize: MainAxisSize.min, children: [
+      Icon(icon, color: Colors.white, size: 13),
+      const SizedBox(width: 4),
+      Text(label, style: const TextStyle(color: Colors.white, fontSize: 11)),
+    ]),
+  );
 }

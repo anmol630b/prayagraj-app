@@ -4,7 +4,6 @@ import '../services/api_service.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
-
   @override
   State<CartScreen> createState() => _CartScreenState();
 }
@@ -35,17 +34,13 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _loadCart();
-    }
+    if (state == AppLifecycleState.resumed) _loadCart();
   }
 
   void _loadCart() async {
     try {
       final items = await ApiService.getCart();
-      if (mounted) {
-        setState(() { _cartItems = items; _isLoading = false; });
-      }
+      if (mounted) setState(() { _cartItems = items; _isLoading = false; });
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -60,59 +55,45 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
   }
 
   void _updateQuantity(int index, int change) async {
-    final item = _cartItems[index];
+    final item   = _cartItems[index];
     final newQty = item['quantity'] + change;
-
-    // UI turant update karo
     setState(() {
-      if (newQty <= 0) {
-        _cartItems.removeAt(index);
-      } else {
-        _cartItems[index]['quantity'] = newQty;
-      }
+      if (newQty <= 0) _cartItems.removeAt(index);
+      else _cartItems[index]['quantity'] = newQty;
     });
-
-    // API background mein call karo
-    if (newQty <= 0) {
-      await ApiService.removeFromCart(item['id']);
-    } else {
-      await ApiService.updateCartQuantity(item['id'], newQty);
-    }
+    if (newQty <= 0) await ApiService.removeFromCart(item['id']);
+    else await ApiService.updateCartQuantity(item['id'], newQty);
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) async {
     final success = await ApiService.placeOrder(_deliveryAddress);
     if (mounted && success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            SizedBox(width: 8),
-            Text('Payment aur Order successful! 🎉'),
-          ]),
-          backgroundColor: Colors.green.shade700,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: const Row(children: [
+          Icon(Icons.check_circle, color: Colors.white),
+          SizedBox(width: 8),
+          Text('Order place ho gaya! 🎉'),
+        ]),
+        backgroundColor: Colors.green.shade700,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ));
       _loadCart();
     }
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(children: [
-            Icon(Icons.error_outline, color: Colors.white),
-            SizedBox(width: 8),
-            Text('Payment fail ho gayi!'),
-          ]),
-          backgroundColor: Colors.red.shade700,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: const Row(children: [
+          Icon(Icons.error_outline, color: Colors.white),
+          SizedBox(width: 8),
+          Text('Payment fail ho gayi!'),
+        ]),
+        backgroundColor: Colors.red.shade700,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ));
     }
   }
 
@@ -137,60 +118,109 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (context) => Padding(
+      builder: (ctx) => Padding(
         padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
             left: 24, right: 24, top: 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        child: Column(mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start, children: [
+          // Header
+          Row(children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.location_on, color: Colors.green.shade700),
+            ),
+            const SizedBox(width: 12),
             const Text('Delivery Address',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            TextField(
-              controller: addressController,
-              maxLines: 3,
-              decoration: InputDecoration(
-                hintText: 'Apna poora address likho...',
-                prefixIcon: const Icon(Icons.location_on, color: Colors.green),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                focusedBorder: OutlineInputBorder(
+          ]),
+          const SizedBox(height: 6),
+          Text('Sahi address doge toh jaldi milega!',
+              style: TextStyle(color: Colors.grey.shade400, fontSize: 13)),
+          const SizedBox(height: 16),
+
+          TextField(
+            controller: addressController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: 'Ghar ka poora address likho...',
+              hintStyle: TextStyle(color: Colors.grey.shade400),
+              filled: true,
+              fillColor: Colors.grey.shade50,
+              border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.green, width: 2),
-                ),
+                  borderSide: BorderSide(color: Colors.grey.shade200)),
+              enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey.shade200)),
+              focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.green, width: 2)),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Price summary
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(children: [
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('${_cartItems.length} items',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                const SizedBox(height: 2),
+                Text('₹${_getTotal().toStringAsFixed(0)}',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,
+                        color: Colors.green.shade700)),
+              ]),
+              const Spacer(),
+              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                Text('Delivery', style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                Text('FREE', style: TextStyle(color: Colors.green.shade700,
+                    fontWeight: FontWeight.bold, fontSize: 13)),
+              ]),
+            ]),
+          ),
+          const SizedBox(height: 16),
+
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                if (addressController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Address daalo pehle!'),
+                    backgroundColor: Colors.orange,
+                    behavior: SnackBarBehavior.floating,
+                  ));
+                  return;
+                }
+                Navigator.pop(ctx);
+                _openRazorpay(addressController.text.trim());
+              },
+              icon: const Icon(Icons.payment, color: Colors.white),
+              label: Text('Pay ₹${_getTotal().toStringAsFixed(0)}',
+                  style: const TextStyle(fontSize: 17, color: Colors.white,
+                      fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green.shade700,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  if (addressController.text.trim().isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Address daalo pehle!')),
-                    );
-                    return;
-                  }
-                  Navigator.pop(context);
-                  _openRazorpay(addressController.text.trim());
-                },
-                icon: const Icon(Icons.payment, color: Colors.white),
-                label: Text('Pay ₹${_getTotal().toStringAsFixed(0)}',
-                    style: const TextStyle(
-                        fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green.shade700,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
+          ),
+          const SizedBox(height: 24),
+        ]),
       ),
     );
   }
@@ -198,211 +228,226 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
-      appBar: AppBar(
-        title: const Text('My Cart 🛒',
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.green.shade700,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              setState(() => _isLoading = true);
-              _loadCart();
-            },
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.green))
-          : _cartItems.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.shopping_cart_outlined,
-                          size: 100, color: Colors.grey.shade300),
-                      const SizedBox(height: 16),
-                      const Text('Cart khali hai!',
-                          style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey)),
-                      const SizedBox(height: 8),
-                      Text('Kuch products add karo',
-                          style: TextStyle(color: Colors.grey.shade500)),
-                    ],
+      backgroundColor: const Color(0xFFF5F5F5),
+      body: SafeArea(
+        child: Column(children: [
+
+          // ── Header ─────────────────────────────────────────
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            child: Row(children: [
+              const Text('My Cart 🛒',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,
+                      color: Colors.black87)),
+              const Spacer(),
+              if (_cartItems.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                )
-              : Column(
-                  children: [
-                    Expanded(
-                      child: ListView.builder(
+                  child: Text('${_cartItems.length} items',
+                      style: TextStyle(color: Colors.green.shade700,
+                          fontWeight: FontWeight.w600, fontSize: 13)),
+                ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () { setState(() => _isLoading = true); _loadCart(); },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.refresh, color: Colors.grey.shade600, size: 20),
+                ),
+              ),
+            ]),
+          ),
+
+          Container(height: 1, color: Colors.grey.shade200),
+
+          // ── Body ───────────────────────────────────────────
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator(color: Colors.green))
+                : _cartItems.isEmpty
+                    ? Center(child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.shopping_cart_outlined,
+                              size: 90, color: Colors.grey.shade300),
+                          const SizedBox(height: 16),
+                          const Text('Cart khali hai!',
+                              style: TextStyle(fontSize: 20,
+                                  fontWeight: FontWeight.bold, color: Colors.black87)),
+                          const SizedBox(height: 6),
+                          Text('Home se products add karo',
+                              style: TextStyle(color: Colors.grey.shade400, fontSize: 14)),
+                        ]))
+                    : ListView.builder(
                         padding: const EdgeInsets.all(12),
                         itemCount: _cartItems.length,
-                        itemBuilder: (context, index) {
-                          final item = _cartItems[index];
-                          final itemTotal =
-                              double.parse(item['product_price'].toString()) *
-                                  item['quantity'];
+                        itemBuilder: (_, index) {
+                          final item      = _cartItems[index];
+                          final itemTotal = double.parse(
+                              item['product_price'].toString()) * item['quantity'];
+                          final imageUrl  = item['product_image'];
+
                           return Container(
                             margin: const EdgeInsets.only(bottom: 10),
-                            padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(14),
-                              boxShadow: [
-                                BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 6)
-                              ],
+                              boxShadow: [BoxShadow(
+                                  color: Colors.black.withOpacity(0.04),
+                                  blurRadius: 6, offset: const Offset(0, 2))],
                             ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 55,
-                                  height: 55,
-                                  decoration: BoxDecoration(
-                                    color: Colors.green.shade50,
-                                    borderRadius: BorderRadius.circular(10),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Row(children: [
+                                // Product image
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: SizedBox(
+                                    width: 70, height: 70,
+                                    child: imageUrl != null && imageUrl.isNotEmpty
+                                        ? Image.network(imageUrl, fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) => _imagePlaceholder())
+                                        : _imagePlaceholder(),
                                   ),
-                                  child: Icon(Icons.shopping_bag,
-                                      color: Colors.green.shade400),
                                 ),
                                 const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
+
+                                // Name + price
+                                Expanded(child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        item['product_name'] ?? 'Product',
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 15),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '₹${item['product_price']}',
-                                        style: TextStyle(
-                                            color: Colors.grey.shade500,
-                                            fontSize: 13),
-                                      ),
-                                    ],
+                                  Text(item['product_name'] ?? 'Product',
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600, fontSize: 14,
+                                          color: Colors.black87),
+                                      maxLines: 2, overflow: TextOverflow.ellipsis),
+                                  const SizedBox(height: 4),
+                                  Text('₹${item['product_price']} / piece',
+                                      style: TextStyle(color: Colors.grey.shade400,
+                                          fontSize: 12)),
+                                  const SizedBox(height: 6),
+                                  Text('₹${itemTotal.toStringAsFixed(0)}',
+                                      style: TextStyle(color: Colors.green.shade700,
+                                          fontWeight: FontWeight.bold, fontSize: 15)),
+                                ])),
+
+                                const SizedBox(width: 8),
+
+                                // Quantity controls
+                                Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey.shade200),
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
-                                ),
-                                Row(
-                                  children: [
+                                  child: Row(children: [
                                     GestureDetector(
                                       onTap: () => _updateQuantity(index, -1),
                                       child: Container(
-                                        width: 30,
-                                        height: 30,
-                                        decoration: BoxDecoration(
-                                          color: Colors.red.shade50,
-                                          borderRadius: BorderRadius.circular(8),
-                                          border: Border.all(
-                                              color: Colors.red.shade200),
+                                        padding: const EdgeInsets.all(6),
+                                        child: Icon(
+                                          item['quantity'] <= 1
+                                              ? Icons.delete_outline
+                                              : Icons.remove,
+                                          size: 18,
+                                          color: item['quantity'] <= 1
+                                              ? Colors.red.shade400
+                                              : Colors.grey.shade600,
                                         ),
-                                        child: Icon(Icons.remove,
-                                            size: 16,
-                                            color: Colors.red.shade400),
                                       ),
                                     ),
                                     Container(
-                                      width: 36,
-                                      alignment: Alignment.center,
-                                      child: Text(
-                                        '${item['quantity']}',
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16),
-                                      ),
+                                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                                      child: Text('${item['quantity']}',
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold, fontSize: 15)),
                                     ),
                                     GestureDetector(
                                       onTap: () => _updateQuantity(index, 1),
                                       child: Container(
-                                        width: 30,
-                                        height: 30,
-                                        decoration: BoxDecoration(
-                                          color: Colors.green.shade50,
-                                          borderRadius: BorderRadius.circular(8),
-                                          border: Border.all(
-                                              color: Colors.green.shade300),
-                                        ),
-                                        child: Icon(Icons.add,
-                                            size: 16,
-                                            color: Colors.green.shade600),
+                                        padding: const EdgeInsets.all(6),
+                                        child: Icon(Icons.add, size: 18,
+                                            color: Colors.green.shade700),
                                       ),
                                     ),
-                                  ],
+                                  ]),
                                 ),
-                                const SizedBox(width: 10),
-                                Text(
-                                  '₹${itemTotal.toStringAsFixed(0)}',
-                                  style: TextStyle(
-                                      color: Colors.green.shade700,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15),
-                                ),
-                              ],
+                              ]),
                             ),
                           );
                         },
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                              color: Colors.black.withOpacity(0.08),
-                              blurRadius: 10,
-                              offset: const Offset(0, -4))
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('${_cartItems.length} items',
-                                  style: TextStyle(color: Colors.grey.shade600)),
-                              Text(
-                                'Total: ₹${_getTotal().toStringAsFixed(0)}',
-                                style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.green.shade700),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            width: double.infinity,
-                            height: 52,
-                            child: ElevatedButton.icon(
-                              onPressed: _placeOrder,
-                              icon: const Icon(Icons.payment, color: Colors.white),
-                              label: const Text('Pay & Order karo',
-                                  style: TextStyle(
-                                      fontSize: 17,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold)),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green.shade700,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+          ),
+
+          // ── Bottom Bar ──────────────────────────────────────
+          if (!_isLoading && _cartItems.isNotEmpty)
+            Container(
+              color: Colors.white,
+              child: Column(children: [
+                Container(height: 1, color: Colors.grey.shade100),
+
+                // Bill summary
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  child: Column(children: [
+                    _billRow('Item Total', '₹${_getTotal().toStringAsFixed(0)}', Colors.black87),
+                    const SizedBox(height: 6),
+                    _billRow('Delivery Charges', 'FREE', Colors.green.shade600),
+                    const Divider(height: 16),
+                    _billRow('Total Amount', '₹${_getTotal().toStringAsFixed(0)}',
+                        Colors.black87, bold: true),
+                  ]),
                 ),
+
+                // Pay button
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      onPressed: _placeOrder,
+                      icon: const Icon(Icons.payment, color: Colors.white),
+                      label: Text(
+                        'Proceed to Pay  ₹${_getTotal().toStringAsFixed(0)}',
+                        style: const TextStyle(fontSize: 16, color: Colors.white,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green.shade700,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+                ),
+              ]),
+            ),
+        ]),
+      ),
     );
   }
+
+  Widget _imagePlaceholder() => Container(
+    color: Colors.grey.shade50,
+    child: Icon(Icons.shopping_bag_outlined, color: Colors.grey.shade300, size: 30),
+  );
+
+  Widget _billRow(String label, String value, Color valueColor, {bool bold = false}) =>
+      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        Text(label, style: TextStyle(
+            color: Colors.grey.shade500, fontSize: 13,
+            fontWeight: bold ? FontWeight.bold : FontWeight.normal)),
+        Text(value, style: TextStyle(
+            color: valueColor, fontSize: bold ? 15 : 13,
+            fontWeight: bold ? FontWeight.bold : FontWeight.w600)),
+      ]);
 }

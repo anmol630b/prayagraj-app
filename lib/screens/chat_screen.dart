@@ -100,10 +100,10 @@ class _ChatScreenState extends State<ChatScreen> {
                       children: [
                         Icon(Icons.chat_bubble_outline, size: 80, color: Colors.grey.shade300),
                         const SizedBox(height: 12),
-                        const Text('Koi message nahi!',
+                        const Text('No messages yet!',
                             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 6),
-                        Text('Support se baat karo',
+                        Text('Chat with support',
                             style: TextStyle(color: Colors.grey.shade400)),
                       ]))
                   : ListView.builder(
@@ -112,21 +112,21 @@ class _ChatScreenState extends State<ChatScreen> {
                       itemCount: _messages.length,
                       itemBuilder: (_, i) {
                         final msg = _messages[i];
-                        final isAdmin = msg['is_admin'] == true;
+                        final isSupport = msg['is_admin'] == true;
                         return Align(
-                          alignment: isAdmin ? Alignment.centerLeft : Alignment.centerRight,
+                          alignment: isSupport ? Alignment.centerLeft : Alignment.centerRight,
                           child: Container(
                             margin: const EdgeInsets.only(bottom: 8),
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                             constraints: BoxConstraints(
                                 maxWidth: MediaQuery.of(context).size.width * 0.72),
                             decoration: BoxDecoration(
-                              color: isAdmin ? Colors.white : Colors.green.shade700,
+                              color: isSupport ? Colors.white : Colors.green.shade700,
                               borderRadius: BorderRadius.only(
                                 topLeft: const Radius.circular(16),
                                 topRight: const Radius.circular(16),
-                                bottomLeft: Radius.circular(isAdmin ? 0 : 16),
-                                bottomRight: Radius.circular(isAdmin ? 16 : 0),
+                                bottomLeft: Radius.circular(isSupport ? 0 : 16),
+                                bottomRight: Radius.circular(isSupport ? 16 : 0),
                               ),
                               boxShadow: [BoxShadow(
                                 color: Colors.black.withOpacity(0.05),
@@ -134,11 +134,11 @@ class _ChatScreenState extends State<ChatScreen> {
                               )],
                             ),
                             child: Column(
-                              crossAxisAlignment: isAdmin
+                              crossAxisAlignment: isSupport
                                   ? CrossAxisAlignment.start
                                   : CrossAxisAlignment.end,
                               children: [
-                                if (isAdmin)
+                                if (isSupport)
                                   Text('Support',
                                       style: TextStyle(
                                           color: Colors.green.shade700,
@@ -146,12 +146,12 @@ class _ChatScreenState extends State<ChatScreen> {
                                           fontWeight: FontWeight.bold)),
                                 Text(msg['message'],
                                     style: TextStyle(
-                                        color: isAdmin ? Colors.black87 : Colors.white,
+                                        color: isSupport ? Colors.black87 : Colors.white,
                                         fontSize: 14)),
                                 const SizedBox(height: 4),
                                 Text(msg['created_at'],
                                     style: TextStyle(
-                                        color: isAdmin
+                                        color: isSupport
                                             ? Colors.grey.shade400
                                             : Colors.white70,
                                         fontSize: 10)),
@@ -173,7 +173,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 controller: _controller,
                 onSubmitted: (_) => _sendMessage(),
                 decoration: InputDecoration(
-                  hintText: 'Message likho...',
+                  hintText: 'Type a message...',
                   hintStyle: TextStyle(color: Colors.grey.shade400),
                   filled: true,
                   fillColor: Colors.grey.shade100,

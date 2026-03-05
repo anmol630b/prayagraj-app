@@ -150,7 +150,7 @@ class _SplashScreenState extends State<SplashScreen>
                           letterSpacing: 0.5,
                         )),
                     const SizedBox(height: 8),
-                    Text('Ghar baithe fresh saman mangao 🏠',
+                    Text('Fresh groceries delivered to your door 🏠',
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.75),
                           fontSize: 15,

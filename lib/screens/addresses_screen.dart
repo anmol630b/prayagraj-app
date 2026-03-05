@@ -44,12 +44,12 @@ class _AddressesScreenState extends State<AddressesScreen> {
               bottom: MediaQuery.of(ctx).viewInsets.bottom,
               left: 20, right: 20, top: 20),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Text('Naya Address', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('New Address', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             TextField(
               controller: labelController,
               decoration: InputDecoration(
-                labelText: 'Label (Ghar, Office...)',
+                labelText: 'Label (Home, Office...)',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
@@ -58,7 +58,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
               controller: addressController,
               maxLines: 3,
               decoration: InputDecoration(
-                labelText: 'Poora Address',
+                labelText: 'Full Address',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
@@ -69,7 +69,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
                 onChanged: (v) => setModal(() => isDefault = v ?? false),
                 activeColor: Colors.green.shade700,
               ),
-              const Text('Default address banao'),
+              const Text('Set as default'),
             ]),
             const SizedBox(height: 12),
             SizedBox(
@@ -82,14 +82,14 @@ class _AddressesScreenState extends State<AddressesScreen> {
                 onPressed: () async {
                   if (addressController.text.trim().isEmpty) return;
                   await ApiService.addSavedAddress(
-                    labelController.text.trim().isEmpty ? 'Ghar' : labelController.text.trim(),
+                    labelController.text.trim().isEmpty ? 'Home' : labelController.text.trim(),
                     addressController.text.trim(),
                     isDefault,
                   );
                   Navigator.pop(ctx);
                   _loadAddresses();
                 },
-                child: const Text('Save karo', style: TextStyle(color: Colors.white, fontSize: 16)),
+                child: const Text('Save', style: TextStyle(color: Colors.white, fontSize: 16)),
               ),
             ),
             const SizedBox(height: 20),
@@ -113,7 +113,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
         onPressed: _addAddress,
         backgroundColor: Colors.green.shade700,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Naya Address', style: TextStyle(color: Colors.white)),
+        label: const Text('New Address', style: TextStyle(color: Colors.white)),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.green))
@@ -123,10 +123,10 @@ class _AddressesScreenState extends State<AddressesScreen> {
                   children: [
                     Icon(Icons.location_off, size: 80, color: Colors.grey.shade300),
                     const SizedBox(height: 12),
-                    const Text('Koi address nahi!',
+                    const Text('No addresses saved!',
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 6),
-                    Text('Naya address add karo',
+                    Text('Add a new address',
                         style: TextStyle(color: Colors.grey.shade400)),
                   ]))
               : ListView.builder(

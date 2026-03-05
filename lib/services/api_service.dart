@@ -1,7 +1,10 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+final navigatorKey = GlobalKey<NavigatorState>();
 
 const String baseUrl = 'https://web-production-d08a8.up.railway.app/api';
 
@@ -10,6 +13,20 @@ String _username = '';
 String _email = '';
 
 class ApiService {
+
+  static void _handle401() {
+    clearSession();
+    navigatorKey.currentState?.pushNamedAndRemoveUntil('/login', (route) => false);
+  }
+
+  static dynamic _parseResponse(http.Response response) {
+    if (response.statusCode == 401) {
+      _handle401();
+      return {};
+    }
+    return jsonDecode(response.body);
+  }
+
   static void setToken(String token) => _token = token;
   static String get username => _username;
   static String get email => _email;

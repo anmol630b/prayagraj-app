@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'screens/login_screen.dart';
+import 'services/api_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -67,6 +69,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Prayagraj Delivery',
       debugShowCheckedModeBanner: false,
       themeMode: _themeMode,
@@ -93,6 +96,9 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
 
+      routes: {
+        '/login': (_) => const LoginScreen(),
+      },
       home: widget.isLoggedIn ? const MainScreen() : const SplashScreen(),
     );
   }

@@ -30,36 +30,36 @@ class OrderScreenState extends State<OrderScreen> {
 
   Color _statusColor(String s) {
     switch (s) {
-      case 'confirmed':        return Colors.blue;
-      case 'delivered':        return Colors.green;
-      case 'cancelled':        return Colors.red;
-      case 'out_for_delivery': return Colors.orange;
+      case 'Confirmed':        return Colors.blue;
+      case 'Delivered':        return Colors.green;
+      case 'Cancelled':        return Colors.red;
+      case 'Out for Delivery': return Colors.orange;
       default:                 return Colors.amber;
     }
   }
 
   IconData _statusIcon(String s) {
     switch (s) {
-      case 'confirmed':        return Icons.check_circle;
-      case 'delivered':        return Icons.done_all;
-      case 'cancelled':        return Icons.cancel;
-      case 'out_for_delivery': return Icons.delivery_dining;
+      case 'Confirmed':        return Icons.check_circle;
+      case 'Delivered':        return Icons.done_all;
+      case 'Cancelled':        return Icons.cancel;
+      case 'Out for Delivery': return Icons.delivery_dining;
       default:                 return Icons.access_time;
     }
   }
 
   String _statusLabel(String s) {
     switch (s) {
-      case 'confirmed':        return 'Confirmed';
-      case 'delivered':        return 'Delivered';
-      case 'cancelled':        return 'Cancelled';
-      case 'out_for_delivery': return 'On the Way';
+      case 'Confirmed':        return 'Confirmed';
+      case 'Delivered':        return 'Delivered';
+      case 'Cancelled':        return 'Cancelled';
+      case 'Out for Delivery': return 'On the Way';
       default:                 return 'Pending';
     }
   }
 
   void _showTracking(BuildContext screenCtx, dynamic order) {
-    final steps       = ['pending', 'confirmed', 'out_for_delivery', 'delivered'];
+    final steps       = ['Pending', 'Confirmed', 'Out for Delivery', 'Delivered'];
     final currentStep = steps.indexOf(order['status']);
 
     showModalBottomSheet(
@@ -152,7 +152,7 @@ class OrderScreenState extends State<OrderScreen> {
           const SizedBox(height: 20),
 
           // Cancel button
-          if (order['status'] == 'pending') ...[
+          if (order['status'] == 'Pending') ...[
             const Divider(),
             const SizedBox(height: 12),
             SizedBox(
@@ -166,12 +166,12 @@ class OrderScreenState extends State<OrderScreen> {
                     builder: (_) => AlertDialog(
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16)),
-                      title: const Text('Order Cancel Karo?'),
-                      content: Text('Order #${order['id']} cancel karna chahte ho?'),
+                      title: const Text('Cancel Order?'),
+                      content: Text('Are you sure you want to cancel Order #${order['id']}?'),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(screenCtx, false),
-                          child: Text('Nahi',
+                          child: Text('No',
                               style: TextStyle(color: Colors.grey.shade600)),
                         ),
                         ElevatedButton(
@@ -180,7 +180,7 @@ class OrderScreenState extends State<OrderScreen> {
                               backgroundColor: Colors.red,
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8))),
-                          child: const Text('Haan, Cancel',
+                          child: const Text('Yes, Cancel',
                               style: TextStyle(color: Colors.white)),
                         ),
                       ],
@@ -191,8 +191,8 @@ class OrderScreenState extends State<OrderScreen> {
                     if (mounted) {
                       ScaffoldMessenger.of(screenCtx).showSnackBar(SnackBar(
                         content: Text(ok
-                            ? '✅ Order cancel ho gaya!'
-                            : '❌ Cancel nahi hua, dobara try karo'),
+                            ? '✅ Order Cancelled!'
+                            : '❌ Could not cancel, please try again'),
                         backgroundColor:
                             ok ? Colors.red.shade600 : Colors.orange,
                         behavior: SnackBarBehavior.floating,
@@ -207,7 +207,7 @@ class OrderScreenState extends State<OrderScreen> {
                   }
                 },
                 icon: const Icon(Icons.cancel_outlined, size: 18),
-                label: const Text('Order Cancel Karo',
+                label: const Text('Cancel Order',
                     style: TextStyle(fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red.shade600,
@@ -252,6 +252,9 @@ class OrderScreenState extends State<OrderScreen> {
       borderRadius: BorderRadius.circular(2),
     ),
   ));
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {
@@ -308,11 +311,11 @@ class OrderScreenState extends State<OrderScreen> {
                           Icon(Icons.receipt_long_outlined,
                               size: 90, color: Colors.grey.shade300),
                           const SizedBox(height: 16),
-                          const Text('Koi order nahi hai!',
+                          const Text('No orders yet!',
                               style: TextStyle(fontSize: 20,
                                   fontWeight: FontWeight.bold, color: Colors.black87)),
                           const SizedBox(height: 6),
-                          Text('Pehla order place karo!',
+                          Text('Place your first order!',
                               style: TextStyle(color: Colors.grey.shade400, fontSize: 14)),
                         ]))
                     : RefreshIndicator(
@@ -324,7 +327,7 @@ class OrderScreenState extends State<OrderScreen> {
                           itemBuilder: (ctx, index) {
                             final order       = _orders[index];
                             final color       = _statusColor(order['status']);
-                            final isPending   = order['status'] == 'pending';
+                            final isPending   = order['status'] == 'Pending';
 
                             return GestureDetector(
                               onTap: () => _showTracking(ctx, order),
@@ -399,7 +402,7 @@ class OrderScreenState extends State<OrderScreen> {
                                         Icon(Icons.info_outline,
                                             size: 13, color: Colors.red.shade400),
                                         const SizedBox(width: 4),
-                                        Text('Cancel kar sakte ho',
+                                        Text('You can cancel this order',
                                             style: TextStyle(
                                                 color: Colors.red.shade400, fontSize: 12)),
                                       ] else ...[
@@ -411,7 +414,7 @@ class OrderScreenState extends State<OrderScreen> {
                                                 color: Colors.grey.shade400, fontSize: 12)),
                                       ],
                                       const Spacer(),
-                                      Text('Details dekho',
+                                      Text('View Details',
                                           style: TextStyle(
                                               color: Colors.green.shade700,
                                               fontSize: 12,

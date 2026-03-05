@@ -93,9 +93,9 @@ class _ProfileScreenState extends State<ProfileScreen>
       title: const Row(children: [
         Icon(Icons.logout, color: Colors.red),
         SizedBox(width: 8),
-        Text('Logout karo?'),
+        Text('Logout?'),
       ]),
-      content: const Text('Kya aap logout karna chahte hain?'),
+      content: const Text('Are you sure you want to logout?'),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context),
             child: Text('Cancel', style: TextStyle(color: Colors.grey.shade600))),
@@ -347,7 +347,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               email.isNotEmpty ? email : 'N/A', Colors.purple),
           _divider(),
           _infoTile(Icons.phone_outlined, 'Phone',
-              _phoneCtrl.text.isNotEmpty ? _phoneCtrl.text : 'Add karo',
+              _phoneCtrl.text.isNotEmpty ? _phoneCtrl.text : 'Add',
               Colors.green),
         ]),
 
@@ -381,11 +381,11 @@ class _ProfileScreenState extends State<ProfileScreen>
               'Password badlo', Colors.indigo, _openChangePassword),
           _divider(),
           _settingTile(Icons.location_on_outlined, 'Saved Addresses',
-              'Apne addresses manage karo', Colors.orange, () => Navigator.push(context,
+              'Manage your addresses', Colors.orange, () => Navigator.push(context,
                   MaterialPageRoute(builder: (_) => const AddressesScreen()))),
           _divider(),
           _settingTile(Icons.chat_outlined, 'Chat Support',
-              'Support se baat karo', Colors.green, () => Navigator.push(context,
+              'Talk to support', Colors.green, () => Navigator.push(context,
                   MaterialPageRoute(builder: (_) => const ChatScreen()))),
           _divider(),
           _settingTile(Icons.help_outline, 'Help & Support',
@@ -439,10 +439,10 @@ class _ProfileScreenState extends State<ProfileScreen>
         mainAxisAlignment: MainAxisAlignment.center, children: [
       Icon(Icons.receipt_long_outlined, size: 80, color: Colors.grey.shade300),
       const SizedBox(height: 12),
-      const Text('Koi order nahi hai!',
+      const Text('No orders yet!',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
       const SizedBox(height: 6),
-      Text('Pehla order place karo!',
+      Text('Place your first order!',
           style: TextStyle(color: Colors.grey.shade400)),
     ]));
 
@@ -519,7 +519,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       Icon(Icons.local_shipping_outlined, size: 12,
                           color: Colors.grey.shade400),
                       const SizedBox(width: 4),
-                      Text('Track karo',
+                      Text('Track',
                           style: TextStyle(color: Colors.grey.shade400, fontSize: 11)),
                     ],
                     const Spacer(),
@@ -586,7 +586,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           child: Row(children: [
             Icon(Icons.lock, color: Colors.green.shade700, size: 16),
             const SizedBox(width: 8),
-            Expanded(child: Text('Aapka data encrypted hai.',
+            Expanded(child: Text('Your data is encrypted and secure.',
                 style: TextStyle(color: Colors.green.shade800, fontSize: 12))),
           ]),
         ),
@@ -624,7 +624,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   _snack('Saare fields bharein!', Colors.orange); return;
                 }
                 if (newC.text != conC.text) {
-                  _snack('Password match nahi kar raha!', Colors.red); return;
+                  _snack('Passwords do not match!', Colors.red); return;
                 }
                 if (newC.text.length < 6) {
                   _snack('Minimum 6 characters!', Colors.orange); return;
@@ -643,7 +643,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               child: loading
                   ? const SizedBox(height: 20, width: 20,
                       child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Text('Password Change Karo',
+                  : const Text('Change Password',
                       style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ),
@@ -667,22 +667,22 @@ class _ProfileScreenState extends State<ProfileScreen>
           _bsHeader(Icons.help_outline, 'Help & Support', Colors.blue),
           const SizedBox(height: 16),
           GestureDetector(onTap: () => _launchUrl('tel:+919999999999'),
-              child: _contactRow(Icons.phone, '+91 9999999999', 'Call karo', Colors.green)),
+              child: _contactRow(Icons.phone, '+91 9999999999', 'Call Us', Colors.green)),
           GestureDetector(onTap: () => _launchUrl('mailto:support@prayagrajdelivery.com'),
               child: _contactRow(Icons.email_outlined, 'support@prayagrajdelivery.com',
-                  'Email karo', Colors.blue)),
+                  'Email Us', Colors.blue)),
           GestureDetector(onTap: () => _launchUrl('https://wa.me/919999999999'),
               child: _contactRow(Icons.chat_outlined, 'WhatsApp',
-                  'Instant reply milega', const Color(0xFF25D366))),
+                  'Instant reply', const Color(0xFF25D366))),
           const SizedBox(height: 16),
           const Text('FAQs', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
           const SizedBox(height: 8),
           _faq('Order cancel kaise kare?',
-              'Orders tab se pending order tap karo aur Cancel button dabao.'),
-          _faq('Refund kab milega?',
-              '3-5 business days mein wapas aata hai.'),
-          _faq('Delivery charge?', 'Sabhi orders pe free delivery hai!'),
-          _faq('Delivery time?', '30-45 minutes mein deliver hota hai.'),
+              'Go to Orders tab, tap on pending order and press Cancel.'),
+          _faq('When will I get refund?',
+              'Refund will be processed in 3-5 business days.'),
+          _faq('Delivery charge?', 'Free delivery on all orders!'),
+          _faq('Delivery time?', 'Delivered in 30-45 minutes.'),
         ]),
       ),
     ),
@@ -819,17 +819,17 @@ class _ProfileScreenState extends State<ProfileScreen>
                     builder: (_) => AlertDialog(
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16)),
-                      title: const Text('Order Cancel Karo?'),
+                      title: const Text('Cancel Order?'),
                       content: Text('Order #${order['id']} cancel karna chahte ho?'),
                       actions: [
                         TextButton(onPressed: () => Navigator.pop(context, false),
-                            child: const Text('Nahi')),
+                            child: const Text('No')),
                         ElevatedButton(
                           onPressed: () => Navigator.pop(context, true),
                           style: ElevatedButton.styleFrom(backgroundColor: Colors.red,
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8))),
-                          child: const Text('Cancel Karo',
+                          child: const Text('Cancel',
                               style: TextStyle(color: Colors.white)),
                         ),
                       ],
@@ -838,14 +838,14 @@ class _ProfileScreenState extends State<ProfileScreen>
                   if (confirm == true) {
                     final ok = await ApiService.cancelOrder(order['id']);
                     if (mounted) {
-                      _snack(ok ? '✅ Order cancel ho gaya!' : '❌ Cancel nahi hua',
+                      _snack(ok ? '✅ Order cancelled!' : '❌ Could not cancel',
                           ok ? Colors.red.shade600 : Colors.orange);
                       if (ok) { setState(() => _isLoading = true); _loadOrders(); }
                     }
                   }
                 },
                 icon: const Icon(Icons.cancel_outlined, size: 18),
-                label: const Text('Order Cancel Karo',
+                label: const Text('Order Cancel',
                     style: TextStyle(fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red.shade600,

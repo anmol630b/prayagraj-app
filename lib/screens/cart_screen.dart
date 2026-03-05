@@ -104,7 +104,7 @@ class CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
         content: const Row(children: [
           Icon(Icons.check_circle, color: Colors.white),
           SizedBox(width: 8),
-          Text('Order place ho gaya! 🎉'),
+          Text('Order placed successfully! 🎉'),
         ]),
         backgroundColor: Colors.green.shade700,
         behavior: SnackBarBehavior.floating,
@@ -120,7 +120,7 @@ class CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
         content: const Row(children: [
           Icon(Icons.error_outline, color: Colors.white),
           SizedBox(width: 8),
-          Text('Payment fail ho gayi!'),
+          Text('Payment failed!'),
         ]),
         backgroundColor: Colors.red.shade700,
         behavior: SnackBarBehavior.floating,
@@ -174,7 +174,7 @@ class CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           ]),
           const SizedBox(height: 6),
-          Text('Sahi address doge toh jaldi milega!',
+          Text('Enter your delivery address',
               style: TextStyle(color: Colors.grey.shade400, fontSize: 13)),
           const SizedBox(height: 16),
 
@@ -182,7 +182,7 @@ class CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
             controller: addressController,
             maxLines: 3,
             decoration: InputDecoration(
-              hintText: 'Ghar ka poora address likho...',
+              hintText: 'Enter your full address...',
               hintStyle: TextStyle(color: Colors.grey.shade400),
               filled: true,
               fillColor: Colors.grey.shade50,
@@ -231,7 +231,7 @@ class CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
               onPressed: () {
                 if (addressController.text.trim().isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Address daalo pehle!'),
+                    content: Text('Please enter delivery address!'),
                     backgroundColor: Colors.orange,
                     behavior: SnackBarBehavior.floating,
                   ));
@@ -255,6 +255,10 @@ class CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
+  bool _orderPlaced = false;
 
   @override
   Widget build(BuildContext context) {
@@ -309,11 +313,11 @@ class CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
                           Icon(Icons.shopping_cart_outlined,
                               size: 90, color: Colors.grey.shade300),
                           const SizedBox(height: 16),
-                          const Text('Cart khali hai!',
+                          const Text('Your cart is empty!',
                               style: TextStyle(fontSize: 20,
                                   fontWeight: FontWeight.bold, color: Colors.black87)),
                           const SizedBox(height: 6),
-                          Text('Home se products add karo',
+                          Text('Add products from Home',
                               style: TextStyle(color: Colors.grey.shade400, fontSize: 14)),
                         ]))
                     : ListView.builder(

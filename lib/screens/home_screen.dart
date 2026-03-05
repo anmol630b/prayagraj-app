@@ -8,7 +8,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   List<dynamic> _products   = [];
   List<dynamic> _categories = [];
   bool _isLoading           = true;
@@ -20,6 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadCategories();
     _loadProducts();
   }
@@ -186,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Icon(Icons.search_off, size: 72, color: Colors.grey.shade300),
                           const SizedBox(height: 12),
-                          Text('Koi product nahi mila',
+                          Text('No products found',
                               style: TextStyle(color: Colors.grey.shade400, fontSize: 15)),
                         ]))
                     : RefreshIndicator(

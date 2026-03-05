@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../services/api_service.dart';
 
 class CartScreen extends StatefulWidget {
@@ -12,12 +11,8 @@ class CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
   List<dynamic> _cartItems = [];
   bool _isLoading = true;
   String _defaultAddress = '';
-  late Razorpay _razorpay;
   String _deliveryAddress = '';
 
-  // ✅ FIX: Payment details store karo order place karne ke liye
-  String _paymentId = '';
-  String _razorpayOrderId = '';
   String _signature = '';
 
   @override
@@ -25,16 +20,11 @@ class CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadCart();
-    _razorpay = Razorpay();
-    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
-    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
-    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _razorpay.clear();
     super.dispose();
   }
 
@@ -86,20 +76,23 @@ class CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
     else await ApiService.updateCartQuantity(item['id'], newQty);
   }
 
-  // ✅ FIX: Payment success mein details save karo, phir order place karo
-  void _handlePaymentSuccess(PaymentSuccessResponse response) async {
-    _paymentId      = response.paymentId ?? '';
-    _razorpayOrderId = response.orderId ?? '';
-    _signature      = response.signature ?? '';
 
-    final success = await ApiService.placeOrder(
-      _deliveryAddress,
-      paymentId: _paymentId,
-      razorpayOrderId: _razorpayOrderId,
-      signature: _signature,
-    );
 
-    if (mounted && success) {
+
+  void _placeCODOrder(String address) async {
+    setState(() => _isLoading = true);
+    try {
+      await ApiService.placeOrder(
+        address: address,
+        paymentMethod: 'cod',
+      );
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      loadCart();
+      // Orders reload trigger karo
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) setState(() {});
+      });
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: const Row(children: [
           Icon(Icons.check_circle, color: Colors.white),
@@ -110,41 +103,17 @@ class CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ));
-      _loadCart();
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Error: \$e'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ));
+      }
     }
   }
-
-  void _handlePaymentError(PaymentFailureResponse response) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: const Row(children: [
-          Icon(Icons.error_outline, color: Colors.white),
-          SizedBox(width: 8),
-          Text('Payment failed!'),
-        ]),
-        backgroundColor: Colors.red.shade700,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ));
-    }
-  }
-
-  void _handleExternalWallet(ExternalWalletResponse response) {}
-
-  void _openRazorpay(String address) async {
-    _deliveryAddress = address;
-    final payment = await ApiService.createPayment(_getTotal().toInt());
-    var options = {
-      'key': payment['key'] ?? '',
-      'amount': (_getTotal() * 100).toInt(),
-      'order_id': payment['order_id'] ?? '',
-      'name': 'Prayagraj Delivery',
-      'description': 'Food Order',
-      'prefill': {'contact': '9999999999', 'email': 'test@test.com'},
-    };
-    _razorpay.open(options);
-  }
-
   void _placeOrder() async {
     await _loadDefaultAddress();
     final addressController = TextEditingController(text: _defaultAddress);
@@ -237,8 +206,11 @@ class CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
                   ));
                   return;
                 }
+                final addr = addressController.text.trim();
                 Navigator.pop(ctx);
-                _openRazorpay(addressController.text.trim());
+                Future.delayed(const Duration(milliseconds: 300), () {
+                  _placeCODOrder(addr);
+                });
               },
               icon: const Icon(Icons.payment, color: Colors.white),
               label: Text('Pay ₹${_getTotal().toStringAsFixed(0)}',

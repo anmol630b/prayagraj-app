@@ -156,12 +156,9 @@ class ApiService {
     return response.statusCode == 200;
   }
 
-  // ✅ FIX 2: placeOrder mein payment details bhi bhejo — Django verify karega
-  static Future<bool> placeOrder(
-    String address, {
-    required String paymentId,
-    required String razorpayOrderId,
-    required String signature,
+  static Future<bool> placeOrder({
+    required String address,
+    String paymentMethod = 'cod',
   }) async {
     String? fcmToken = await FirebaseMessaging.instance.getToken();
     final response = await http.post(
@@ -173,9 +170,7 @@ class ApiService {
       body: jsonEncode({
         'address': address,
         'fcm_token': fcmToken,
-        'razorpay_payment_id': paymentId,       // ✅ payment verify hoga
-        'razorpay_order_id': razorpayOrderId,
-        'razorpay_signature': signature,
+        'payment_method': paymentMethod,
       }),
     );
     return response.statusCode == 201;

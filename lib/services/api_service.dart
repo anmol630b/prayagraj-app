@@ -355,4 +355,12 @@ class ApiService {
       return jsonDecode(response.body);
     }
   }
+
+  static Future<dynamic> getOrderTracking(int orderId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/orders/$orderId/tracking/'),
+      headers: {'Authorization': 'Bearer $_token'},
+    );
+    return jsonDecode(response.body);
+  }
 }

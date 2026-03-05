@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import 'order_detail_screen.dart';
 
 class OrderScreen extends StatefulWidget {
   const OrderScreen({super.key});
@@ -414,13 +415,20 @@ class OrderScreenState extends State<OrderScreen> {
                                                 color: Colors.grey.shade400, fontSize: 12)),
                                       ],
                                       const Spacer(),
-                                      Text('View Details',
-                                          style: TextStyle(
-                                              color: Colors.green.shade700,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600)),
-                                      Icon(Icons.arrow_forward_ios,
-                                          size: 11, color: Colors.green.shade700),
+                                      GestureDetector(
+                                        onTap: () => Navigator.push(context,
+                                          MaterialPageRoute(builder: (_) =>
+                                            OrderDetailScreen(order: order))),
+                                        child: Row(children: [
+                                          Text('View Details',
+                                              style: TextStyle(
+                                                  color: Colors.green.shade700,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w600)),
+                                          Icon(Icons.arrow_forward_ios,
+                                              size: 11, color: Colors.green.shade700),
+                                        ]),
+                                      ),
                                     ]),
                                   ]),
                                 ),

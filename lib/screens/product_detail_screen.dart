@@ -26,12 +26,26 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   void initState() {
     super.initState();
     _loadRatings();
-    _loadWishlistStatus();
+    // Cache se pehle load karo
+    if (_wishlistCache.containsKey(widget.product['id'])) {
+      _wishlisted = _wishlistCache[widget.product['id']]!;
+    } else {
+      _loadWishlistStatus();
+    }
   }
 
   void _toggleWishlist() async {
-    final result = await ApiService.toggleWishlist(widget.product['id'], _wishlisted);
-    if (mounted) setState(() => _wishlisted = result['wishlisted'] ?? false);
+    final newVal = !_wishlisted;
+    setState(() => _wishlisted = newVal);
+    _wishlistCache[widget.product['id']] = newVal;
+    try {
+      await ApiService.toggleWishlist(widget.product['id'], !newVal);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _wishlisted = !newVal);
+        _wishlistCache[widget.product['id']] = !newVal;
+      }
+    }
   }
 
   Future<void> _loadWishlistStatus() async {
@@ -41,6 +55,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       if (mounted) setState(() => _wishlisted = isWishlisted);
     } catch (e) {}
   }
+
+  // Wishlist status cached hai
+  static final Map<int, bool> _wishlistCache = {};
 
   void _loadRatings() async {
     try {

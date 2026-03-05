@@ -6,6 +6,7 @@ import '../main.dart';
 import 'login_screen.dart';
 import 'chat_screen.dart';
 import 'addresses_screen.dart';
+import 'wishlist_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -379,6 +380,10 @@ class _ProfileScreenState extends State<ProfileScreen>
           _divider(),
           _settingTile(Icons.lock_outline, 'Change Password',
               'Password badlo', Colors.indigo, _openChangePassword),
+          _divider(),
+          _settingTile(Icons.favorite_outline, 'My Wishlist',
+              'View your saved products', Colors.red, () => Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const WishlistScreen()))),
           _divider(),
           _settingTile(Icons.location_on_outlined, 'Saved Addresses',
               'Manage your addresses', Colors.orange, () => Navigator.push(context,

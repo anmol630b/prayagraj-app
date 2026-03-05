@@ -4,7 +4,8 @@ import '../services/api_service.dart';
 import 'product_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final Function(bool)? onScroll;
+  const HomeScreen({super.key, this.onScroll});
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -17,6 +18,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int? _selectedCategory;
   final TextEditingController _searchController = TextEditingController();
   final Set<int> _loadingItems = {};
+  final ScrollController _scrollController = ScrollController();
+  double _lastScrollPos = 0;
   Timer? _searchTimer;
 
   @override
@@ -24,6 +27,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadCategories();
+    _scrollController.addListener(() {
+      final currentPos = _scrollController.position.pixels;
+      final isScrollingDown = currentPos > _lastScrollPos;
+      widget.onScroll?.call(isScrollingDown);
+      _lastScrollPos = currentPos;
+    });
     _loadProducts();
   }
 

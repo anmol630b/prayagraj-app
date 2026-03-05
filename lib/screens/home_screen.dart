@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '../services/api_service.dart';
 import 'product_detail_screen.dart';
 
@@ -16,6 +17,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int? _selectedCategory;
   final TextEditingController _searchController = TextEditingController();
   final Set<int> _loadingItems = {};
+  Timer? _searchTimer;
 
   @override
   void initState() {

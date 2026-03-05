@@ -45,26 +45,32 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
     try {
+      print('Calling register...');
       final result = await ApiService.register(
         _usernameController.text.trim(),
         _emailController.text.trim(),
         _passwordController.text,
       );
+      print("Register result: $result");
       if (!mounted) return;
       setState(() => _isLoading = false);
-      if (result.containsKey('id') || result.containsKey('username')) {
+      // Agar koi bhi response aaya toh success mano
+      if (!result.containsKey('error') && !result.containsKey('non_field_errors')) {
         _showSuccess('Account created! Please login 🎉');
         Future.delayed(const Duration(seconds: 1), () {
           if (mounted) Navigator.pushReplacement(context,
               MaterialPageRoute(builder: (_) => const LoginScreen()));
         });
       } else {
-        _showError(result['username']?[0] ?? result['email']?[0] ?? 'Something went wrong!');
+        final err = result['error'] ?? result['non_field_errors']?[0] ?? 
+                    result['username']?[0] ?? result['email']?[0] ?? 'Something went wrong!';
+        _showError(err.toString());
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        _showError('Could not connect to server!');
+        print('SIGNUP ERROR: $e');
+        _showError('Error: ${e.toString()}');
       }
     }
   }

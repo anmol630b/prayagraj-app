@@ -41,12 +41,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
     try {
+      print('LOGIN ATTEMPT: username=${_usernameController.text.trim()}');
       final result = await ApiService.login(
         _usernameController.text.trim(),
         _passwordController.text,
       );
       if (!mounted) return;
       setState(() => _isLoading = false);
+      print("LOGIN RESULT: $result");
       if (result.containsKey('access')) {
         Navigator.pushReplacement(context,
           PageRouteBuilder(

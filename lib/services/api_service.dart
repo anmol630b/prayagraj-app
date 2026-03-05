@@ -86,11 +86,11 @@ class ApiService {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'username': username, 'password': password, 'email': email}),
     );
-    if (response.statusCode == 201) {
-      _username = username;
-      _email = email;
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return {'message': 'success', ...data};
     }
-    return jsonDecode(response.body);
+    return data;
   }
 
   static Future<List<dynamic>> getProducts({
@@ -359,6 +359,26 @@ class ApiService {
   static Future<dynamic> getOrderTracking(int orderId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/orders/$orderId/tracking/'),
+      headers: {'Authorization': 'Bearer $_token'},
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<void> updateProfile({String? phone, String? email, String? avatarUrl}) async {
+    await http.post(
+      Uri.parse('$baseUrl/profile/'),
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
+      body: jsonEncode({
+        if (phone != null) 'phone': phone,
+        if (email != null) 'email': email,
+        if (avatarUrl != null) 'avatar_url': avatarUrl,
+      }),
+    );
+  }
+
+  static Future<Map<String, dynamic>> getProfile() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/profile/'),
       headers: {'Authorization': 'Bearer $_token'},
     );
     return jsonDecode(response.body);

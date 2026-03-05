@@ -50,10 +50,12 @@ class _MainScreenState extends State<MainScreen> {
                   color: Colors.black.withOpacity(0.08),
                   blurRadius: 20,
                   offset: const Offset(0, -4))],
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20)),
             ),
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20)),
               child: BottomNavigationBar(
                 currentIndex: _currentIndex,
                 onTap: (index) {

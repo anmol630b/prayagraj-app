@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'order_tracking_screen.dart';
 import '../services/api_service.dart';
 import 'order_detail_screen.dart';
 
@@ -255,7 +256,7 @@ class OrderScreenState extends State<OrderScreen> {
   ));
 
   @override
-  bool get wantKeepAlive => true;
+  bool get wantKeepAlive => false;
 
   @override
   Widget build(BuildContext context) {
@@ -331,7 +332,9 @@ class OrderScreenState extends State<OrderScreen> {
                             final isPending   = order['status'] == 'Pending';
 
                             return GestureDetector(
-                              onTap: () => _showTracking(ctx, order),
+                              onTap: () => Navigator.push(context,
+                                MaterialPageRoute(builder: (_) => 
+                                    OrderTrackingScreen(order: order))),
                               child: Container(
                                 margin: const EdgeInsets.only(bottom: 10),
                                 decoration: BoxDecoration(
